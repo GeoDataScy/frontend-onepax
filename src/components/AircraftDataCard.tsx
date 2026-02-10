@@ -57,7 +57,7 @@ export function AircraftDataCard({ formData, onChange, isCatraca2 }: AircraftDat
           <Label htmlFor="numeroVoo">Nº do Voo</Label>
           <Input
             id="numeroVoo"
-            placeholder="Ex: TAM123"
+            placeholder=""
             value={formData.numeroVoo}
             onChange={(e) => onChange("numeroVoo", e.target.value)}
           />
