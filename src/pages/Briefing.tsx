@@ -110,6 +110,22 @@ export default function Briefing() {
         }
     };
 
+    /* ─── Quick-fill helpers ─── */
+    const getTodayDate = () => {
+        const now = new Date();
+        const dd = now.getDate().toString().padStart(2, "0");
+        const mm = (now.getMonth() + 1).toString().padStart(2, "0");
+        const yyyy = now.getFullYear();
+        return `${dd}/${mm}/${yyyy}`;
+    };
+
+    const getCurrentTime = () => {
+        const now = new Date();
+        const hh = now.getHours().toString().padStart(2, "0");
+        const min = now.getMinutes().toString().padStart(2, "0");
+        return `${hh}:${min}`;
+    };
+
     /* ─── Styles ─── */
     const colors = {
         bg: "#f7f7f5",
@@ -134,6 +150,33 @@ export default function Briefing() {
         letterSpacing: "0.01em",
         outline: "none",
         transition: "border-color 0.2s, box-shadow 0.2s",
+    };
+
+    const selectStyle: React.CSSProperties = {
+        ...inputStyle,
+        appearance: "none",
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "right 14px center",
+        paddingRight: "36px",
+        cursor: "pointer",
+    };
+
+    const quickBtnStyle: React.CSSProperties = {
+        height: "44px",
+        padding: "0 14px",
+        backgroundColor: colors.card,
+        color: colors.text,
+        border: `1px solid ${colors.border}`,
+        borderRadius: "4px",
+        fontSize: "12px",
+        fontWeight: 500,
+        fontFamily: "'Inter', sans-serif",
+        letterSpacing: "0.02em",
+        cursor: "pointer",
+        transition: "background-color 0.2s",
+        whiteSpace: "nowrap",
+        flexShrink: 0,
     };
 
     const labelStyle: React.CSSProperties = {
@@ -200,7 +243,7 @@ export default function Briefing() {
                             gap: "8px",
                             height: "40px",
                             padding: "0 20px",
-                            backgroundColor: showForm ? colors.text : colors.text,
+                            backgroundColor: colors.text,
                             color: colors.white,
                             border: "none",
                             borderRadius: "4px",
@@ -247,15 +290,16 @@ export default function Briefing() {
                                     gap: "20px",
                                 }}
                             >
-                                {/* Companhia Aérea */}
+                                {/* Companhia Aérea — Selectbox */}
                                 <div>
                                     <label style={labelStyle}>Companhia Aérea</label>
-                                    <input
-                                        type="text"
+                                    <select
                                         value={form.companhia_aerea}
                                         onChange={(e) => updateField("companhia_aerea", e.target.value)}
-                                        placeholder="Ex: LATAM, GOL"
-                                        style={inputStyle}
+                                        style={{
+                                            ...selectStyle,
+                                            color: form.companhia_aerea ? colors.text : colors.textMuted,
+                                        }}
                                         onFocus={(e) => {
                                             e.target.style.borderColor = colors.accent;
                                             e.target.style.boxShadow = `0 0 0 3px ${colors.accent}20`;
@@ -264,18 +308,25 @@ export default function Briefing() {
                                             e.target.style.borderColor = colors.border;
                                             e.target.style.boxShadow = "none";
                                         }}
-                                    />
+                                    >
+                                        <option value="" disabled>Selecione</option>
+                                        <option value="Omni Taxi Aéreo">Omni Taxi Aéreo</option>
+                                        <option value="Bristow Taxi Aéreo">Bristow Taxi Aéreo</option>
+                                        <option value="Líder Taxi Aéreo">Líder Taxi Aéreo</option>
+                                        <option value="CHC Brasil Taxi Aéreo">CHC Brasil Taxi Aéreo</option>
+                                    </select>
                                 </div>
 
-                                {/* Cliente Final */}
+                                {/* Cliente Final — Selectbox */}
                                 <div>
                                     <label style={labelStyle}>Cliente Final</label>
-                                    <input
-                                        type="text"
+                                    <select
                                         value={form.cliente_final}
                                         onChange={(e) => updateField("cliente_final", e.target.value)}
-                                        placeholder="Nome do cliente"
-                                        style={inputStyle}
+                                        style={{
+                                            ...selectStyle,
+                                            color: form.cliente_final ? colors.text : colors.textMuted,
+                                        }}
                                         onFocus={(e) => {
                                             e.target.style.borderColor = colors.accent;
                                             e.target.style.boxShadow = `0 0 0 3px ${colors.accent}20`;
@@ -284,28 +335,47 @@ export default function Briefing() {
                                             e.target.style.borderColor = colors.border;
                                             e.target.style.boxShadow = "none";
                                         }}
-                                    />
+                                    >
+                                        <option value="" disabled>Selecione</option>
+                                        <option value="Petrobras">Petrobras</option>
+                                        <option value="Prio">Prio</option>
+                                    </select>
                                 </div>
 
-                                {/* Data */}
+                                {/* Data — Input + Botão Hoje */}
                                 <div>
                                     <label style={labelStyle}>Data</label>
-                                    <input
-                                        type="text"
-                                        value={form.data}
-                                        onChange={(e) => updateField("data", maskDate(e.target.value))}
-                                        placeholder="DD/MM/AAAA"
-                                        maxLength={10}
-                                        style={inputStyle}
-                                        onFocus={(e) => {
-                                            e.target.style.borderColor = colors.accent;
-                                            e.target.style.boxShadow = `0 0 0 3px ${colors.accent}20`;
-                                        }}
-                                        onBlur={(e) => {
-                                            e.target.style.borderColor = colors.border;
-                                            e.target.style.boxShadow = "none";
-                                        }}
-                                    />
+                                    <div style={{ display: "flex", gap: "8px" }}>
+                                        <input
+                                            type="text"
+                                            value={form.data}
+                                            onChange={(e) => updateField("data", maskDate(e.target.value))}
+                                            placeholder="DD/MM/AAAA"
+                                            maxLength={10}
+                                            style={inputStyle}
+                                            onFocus={(e) => {
+                                                e.target.style.borderColor = colors.accent;
+                                                e.target.style.boxShadow = `0 0 0 3px ${colors.accent}20`;
+                                            }}
+                                            onBlur={(e) => {
+                                                e.target.style.borderColor = colors.border;
+                                                e.target.style.boxShadow = "none";
+                                            }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => updateField("data", getTodayDate())}
+                                            style={quickBtnStyle}
+                                            onMouseEnter={(e) =>
+                                                ((e.target as HTMLElement).style.backgroundColor = colors.border)
+                                            }
+                                            onMouseLeave={(e) =>
+                                                ((e.target as HTMLElement).style.backgroundColor = colors.card)
+                                            }
+                                        >
+                                            Hoje
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {/* Número do Voo */}
@@ -318,7 +388,6 @@ export default function Briefing() {
                                             const v = e.target.value.replace(/\D/g, "");
                                             updateField("numero_voo", v);
                                         }}
-                                        placeholder="Ex: 1234"
                                         style={inputStyle}
                                         onFocus={(e) => {
                                             e.target.style.borderColor = colors.accent;
@@ -338,7 +407,6 @@ export default function Briefing() {
                                         type="text"
                                         value={form.unidade_maritima}
                                         onChange={(e) => updateField("unidade_maritima", e.target.value)}
-                                        placeholder="Nome da unidade"
                                         style={inputStyle}
                                         onFocus={(e) => {
                                             e.target.style.borderColor = colors.accent;
@@ -351,36 +419,52 @@ export default function Briefing() {
                                     />
                                 </div>
 
-                                {/* Horário */}
+                                {/* Horário — Input + Botão Agora */}
                                 <div>
                                     <label style={labelStyle}>Horário</label>
-                                    <input
-                                        type="text"
-                                        value={form.horario}
-                                        onChange={(e) => updateField("horario", maskTime(e.target.value))}
-                                        placeholder="HH:MM"
-                                        maxLength={5}
-                                        style={inputStyle}
-                                        onFocus={(e) => {
-                                            e.target.style.borderColor = colors.accent;
-                                            e.target.style.boxShadow = `0 0 0 3px ${colors.accent}20`;
-                                        }}
-                                        onBlur={(e) => {
-                                            e.target.style.borderColor = colors.border;
-                                            e.target.style.boxShadow = "none";
-                                        }}
-                                    />
+                                    <div style={{ display: "flex", gap: "8px" }}>
+                                        <input
+                                            type="text"
+                                            value={form.horario}
+                                            onChange={(e) => updateField("horario", maskTime(e.target.value))}
+                                            placeholder="HH:MM"
+                                            maxLength={5}
+                                            style={inputStyle}
+                                            onFocus={(e) => {
+                                                e.target.style.borderColor = colors.accent;
+                                                e.target.style.boxShadow = `0 0 0 3px ${colors.accent}20`;
+                                            }}
+                                            onBlur={(e) => {
+                                                e.target.style.borderColor = colors.border;
+                                                e.target.style.boxShadow = "none";
+                                            }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => updateField("horario", getCurrentTime())}
+                                            style={quickBtnStyle}
+                                            onMouseEnter={(e) =>
+                                                ((e.target as HTMLElement).style.backgroundColor = colors.border)
+                                            }
+                                            onMouseLeave={(e) =>
+                                                ((e.target as HTMLElement).style.backgroundColor = colors.card)
+                                            }
+                                        >
+                                            Agora
+                                        </button>
+                                    </div>
                                 </div>
 
-                                {/* Serviço */}
+                                {/* Serviço — Selectbox */}
                                 <div>
                                     <label style={labelStyle}>Serviço</label>
-                                    <input
-                                        type="text"
+                                    <select
                                         value={form.servico}
                                         onChange={(e) => updateField("servico", e.target.value)}
-                                        placeholder="Tipo de serviço"
-                                        style={inputStyle}
+                                        style={{
+                                            ...selectStyle,
+                                            color: form.servico ? colors.text : colors.textMuted,
+                                        }}
                                         onFocus={(e) => {
                                             e.target.style.borderColor = colors.accent;
                                             e.target.style.boxShadow = `0 0 0 3px ${colors.accent}20`;
@@ -389,7 +473,11 @@ export default function Briefing() {
                                             e.target.style.borderColor = colors.border;
                                             e.target.style.boxShadow = "none";
                                         }}
-                                    />
+                                    >
+                                        <option value="" disabled>Selecione</option>
+                                        <option value="Briefing">Briefing</option>
+                                        <option value="Debriefing">Debriefing</option>
+                                    </select>
                                 </div>
 
                                 {/* Solicitante */}
@@ -399,7 +487,6 @@ export default function Briefing() {
                                         type="text"
                                         value={form.solicitante}
                                         onChange={(e) => updateField("solicitante", e.target.value)}
-                                        placeholder="Nome do solicitante"
                                         style={inputStyle}
                                         onFocus={(e) => {
                                             e.target.style.borderColor = colors.accent;
