@@ -34,22 +34,22 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/briefing" element={
-              <ProtectedRoute>
+              <ProtectedRoute denyRoles={['apac']}>
                 <Briefing />
               </ProtectedRoute>
             } />
             <Route path="/transporte" element={
-              <ProtectedRoute>
+              <ProtectedRoute denyRoles={['apac']}>
                 <Transporte />
               </ProtectedRoute>
             } />
             <Route path="/supervisor" element={
-              <ProtectedRoute>
+              <ProtectedRoute denyRoles={['apac']}>
                 <Supervisor />
               </ProtectedRoute>
             } />
             <Route path="/central-analise" element={
-              <ProtectedRoute>
+              <ProtectedRoute denyRoles={['apac']}>
                 <CentralAnalise />
               </ProtectedRoute>
             } />

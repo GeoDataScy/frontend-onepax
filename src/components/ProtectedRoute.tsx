@@ -1,13 +1,16 @@
 ﻿import { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface ProtectedRouteProps {
     children: ReactNode;
+    denyRoles?: string[];
 }
 
-export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-    const { isAuthenticated, isLoading } = useAuth();
+export const ProtectedRoute = ({ children, denyRoles = [] }: ProtectedRouteProps) => {
+    const { user, isAuthenticated, isLoading } = useAuth();
+    const location = useLocation();
 
     if (isLoading) {
         return (
@@ -21,7 +24,13 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     }
 
     if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/login" replace state={{ from: location }} />;
+    }
+
+    if (user && denyRoles.includes(user.role)) {
+        // Prevent toast spam during redirect
+        // toast.error(`Acesso negado para o perfil: ${user.role}`);
+        return <Navigate to="/" replace />;
     }
 
     return <>{children}</>;
