@@ -151,6 +151,16 @@ export default function Transporte() {
         transition: "border-color 0.2s, box-shadow 0.2s",
     };
 
+    const selectStyle: React.CSSProperties = {
+        ...inputStyle,
+        appearance: "none" as const,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "right 14px center",
+        paddingRight: "36px",
+        cursor: "pointer",
+    };
+
     const quickBtnStyle: React.CSSProperties = {
         height: "44px",
         padding: "0 14px",
@@ -180,11 +190,11 @@ export default function Transporte() {
     };
 
     const focusHandlers = {
-        onFocus: (e: React.FocusEvent<HTMLInputElement>) => {
+        onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
             e.target.style.borderColor = colors.accent;
             e.target.style.boxShadow = `0 0 0 3px ${colors.accent}20`;
         },
-        onBlur: (e: React.FocusEvent<HTMLInputElement>) => {
+        onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
             e.target.style.borderColor = colors.border;
             e.target.style.boxShadow = "none";
         },
@@ -290,28 +300,42 @@ export default function Transporte() {
                                     gap: "20px",
                                 }}
                             >
-                                {/* Empresa Solicitante */}
+                                {/* Empresa Solicitante — Selectbox */}
                                 <div>
                                     <label style={labelStyle}>Empresa que Solicita</label>
-                                    <input
-                                        type="text"
+                                    <select
                                         value={form.empresa_solicitante}
                                         onChange={(e) => updateField("empresa_solicitante", e.target.value)}
-                                        style={inputStyle}
+                                        style={{
+                                            ...selectStyle,
+                                            color: form.empresa_solicitante ? colors.text : colors.textMuted,
+                                        }}
                                         {...focusHandlers}
-                                    />
+                                    >
+                                        <option value="" disabled>Selecione</option>
+                                        <option value="Omni Taxi Aéreo">Omni Taxi Aéreo</option>
+                                        <option value="Bristow Taxi Aéreo">Bristow Taxi Aéreo</option>
+                                        <option value="Líder Taxi Aéreo">Líder Taxi Aéreo</option>
+                                        <option value="CHC Brasil Taxi Aéreo">CHC Brasil Taxi Aéreo</option>
+                                    </select>
                                 </div>
 
-                                {/* Cliente Final */}
+                                {/* Cliente Final — Selectbox */}
                                 <div>
                                     <label style={labelStyle}>Cliente Final</label>
-                                    <input
-                                        type="text"
+                                    <select
                                         value={form.cliente_final}
                                         onChange={(e) => updateField("cliente_final", e.target.value)}
-                                        style={inputStyle}
+                                        style={{
+                                            ...selectStyle,
+                                            color: form.cliente_final ? colors.text : colors.textMuted,
+                                        }}
                                         {...focusHandlers}
-                                    />
+                                    >
+                                        <option value="" disabled>Selecione</option>
+                                        <option value="Petrobras">Petrobras</option>
+                                        <option value="Prio">Prio</option>
+                                    </select>
                                 </div>
 
                                 {/* Data + Hoje */}
@@ -423,16 +447,22 @@ export default function Transporte() {
                                     </div>
                                 </div>
 
-                                {/* Serviço */}
+                                {/* Serviço — Selectbox */}
                                 <div>
                                     <label style={labelStyle}>Serviço</label>
-                                    <input
-                                        type="text"
+                                    <select
                                         value={form.servico}
                                         onChange={(e) => updateField("servico", e.target.value)}
-                                        style={inputStyle}
+                                        style={{
+                                            ...selectStyle,
+                                            color: form.servico ? colors.text : colors.textMuted,
+                                        }}
                                         {...focusHandlers}
-                                    />
+                                    >
+                                        <option value="" disabled>Selecione</option>
+                                        <option value="Embarque">Embarque</option>
+                                        <option value="Desembarque">Desembarque</option>
+                                    </select>
                                 </div>
                             </div>
 
