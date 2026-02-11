@@ -1,6 +1,5 @@
 ﻿import { useState, useEffect } from "react";
 import { Bell, User, LogOut } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -32,14 +31,14 @@ export function Navbar() {
   };
 
   return (
-    <nav className="w-full bg-navbar text-navbar-foreground px-6 py-3 flex items-center justify-between">
+    <nav className="w-full text-white px-6 py-3 flex items-center justify-between" style={{ backgroundColor: '#0a0e1a' }}>
       <div className="flex items-center gap-3">
-        <h1 className="text-lg font-semibold tracking-tight">
-          Sistema Aeroportuário de Processamento e Informação
-        </h1>
-        <Badge variant="secondary" className="bg-primary/20 text-primary-foreground border-0 text-xs">
-          v2.0
-        </Badge>
+        <img
+          src="/Onepax_cabecalho.png"
+          alt="Onepax"
+          className="h-9 w-auto object-contain select-none"
+          draggable={false}
+        />
       </div>
 
       <div className="flex items-center gap-6">
@@ -48,18 +47,18 @@ export function Navbar() {
           <span className="text-sm font-medium">ControlID Conectado</span>
         </div>
 
-        <span className="text-sm text-navbar-foreground/80 font-mono">
+        <span className="text-sm text-white/80 font-mono">
           {formatDate(currentTime)}
         </span>
 
         <div className="flex items-center gap-3">
-          <button className="p-2 rounded-lg hover:bg-navbar-foreground/10 transition-colors">
+          <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
             <Bell className="w-5 h-5" />
           </button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-lg hover:bg-navbar-foreground/10">
+              <Button variant="ghost" size="icon" className="rounded-lg hover:bg-white/10">
                 <User className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
