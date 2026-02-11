@@ -51,10 +51,25 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
             // Redirecionar baseado no local selecionado
             const userLocal = localStorage.getItem('user_local');
-            if (userLocal === 'DESEMBARQUE') {
-                navigate('/desembarque');
-            } else {
-                navigate('/'); // Embarque (padrão)
+            switch (userLocal) {
+                case 'DESEMBARQUE':
+                    navigate('/desembarque');
+                    break;
+                case 'BRIEFING':
+                    navigate('/briefing');
+                    break;
+                case 'TRANSPORTE':
+                    navigate('/transporte');
+                    break;
+                case 'SUPERVISOR':
+                    navigate('/supervisor');
+                    break;
+                case 'CENTRAL_ANALISE':
+                    navigate('/central-analise');
+                    break;
+                default:
+                    navigate('/'); // Embarque (padrão)
+                    break;
             }
         } catch (error: any) {
             toast.error(error.message || 'Erro ao fazer login');

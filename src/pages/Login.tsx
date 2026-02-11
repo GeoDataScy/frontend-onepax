@@ -5,7 +5,7 @@ import { Lock, User, MapPin, ArrowRight } from 'lucide-react';
 export default function Login() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [local, setLocal] = useState<'EMBARQUE' | 'DESEMBARQUE' | ''>('');
+    const [local, setLocal] = useState<'EMBARQUE' | 'DESEMBARQUE' | 'BRIEFING' | 'TRANSPORTE' | 'SUPERVISOR' | 'CENTRAL_ANALISE' | ''>('');
     const [isLoading, setIsLoading] = useState(false);
     const [mounted, setMounted] = useState(false);
     const { login } = useAuth();
@@ -154,7 +154,7 @@ export default function Login() {
                                     id="local"
                                     value={local}
                                     onChange={(e) =>
-                                        setLocal(e.target.value as 'EMBARQUE' | 'DESEMBARQUE' | '')
+                                        setLocal(e.target.value as 'EMBARQUE' | 'DESEMBARQUE' | 'BRIEFING' | 'TRANSPORTE' | 'SUPERVISOR' | 'CENTRAL_ANALISE' | '')
                                     }
                                     required
                                     disabled={isLoading}
@@ -181,6 +181,18 @@ export default function Login() {
                                     </option>
                                     <option value="DESEMBARQUE" style={{ color: '#1A1A2E' }}>
                                         Desembarque
+                                    </option>
+                                    <option value="BRIEFING" style={{ color: '#1A1A2E' }}>
+                                        Sala de Briefing
+                                    </option>
+                                    <option value="TRANSPORTE" style={{ color: '#1A1A2E' }}>
+                                        Transporte
+                                    </option>
+                                    <option value="SUPERVISOR" style={{ color: '#1A1A2E' }}>
+                                        Área do Supervisor
+                                    </option>
+                                    <option value="CENTRAL_ANALISE" style={{ color: '#1A1A2E' }}>
+                                        Central de Análise
                                     </option>
                                 </select>
                                 {/* Custom dropdown arrow */}

@@ -3,6 +3,8 @@ const API_URL = 'https://onepax-onepax.7y6zlt.easypanel.host';
 export interface LoginResponse {
     access: string;
     refresh: string;
+    role: string;
+    username: string;
 }
 
 export interface User {
@@ -11,6 +13,7 @@ export interface User {
     email: string;
     first_name: string;
     last_name: string;
+    role: string;
 }
 
 export const authService = {

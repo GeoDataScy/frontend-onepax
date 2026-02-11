@@ -6,6 +6,10 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { NotificationContainer } from "@/components/NotificationContainer";
 import Index from "./pages/Index";
 import Desembarque from "./pages/Desembarque";
+import Briefing from "./pages/Briefing";
+import Transporte from "./pages/Transporte";
+import Supervisor from "./pages/Supervisor";
+import CentralAnalise from "./pages/CentralAnalise";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -27,6 +31,26 @@ const App = () => (
             <Route path="/desembarque" element={
               <ProtectedRoute>
                 <Desembarque />
+              </ProtectedRoute>
+            } />
+            <Route path="/briefing" element={
+              <ProtectedRoute>
+                <Briefing />
+              </ProtectedRoute>
+            } />
+            <Route path="/transporte" element={
+              <ProtectedRoute>
+                <Transporte />
+              </ProtectedRoute>
+            } />
+            <Route path="/supervisor" element={
+              <ProtectedRoute>
+                <Supervisor />
+              </ProtectedRoute>
+            } />
+            <Route path="/central-analise" element={
+              <ProtectedRoute>
+                <CentralAnalise />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
