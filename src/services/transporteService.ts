@@ -41,4 +41,14 @@ export const transporteService = {
         }
         return response.json();
     },
+
+    async update(id: number, record: Partial<TransporteRecord>): Promise<TransporteRecord> {
+        const response = await fetch(`${API_URL}/api/transporte/${id}/`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(record),
+        });
+        if (!response.ok) throw new Error('Erro ao atualizar registro de transporte');
+        return response.json();
+    },
 };

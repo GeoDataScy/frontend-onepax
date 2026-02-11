@@ -47,4 +47,14 @@ export const briefingService = {
 
         return response.json();
     },
+
+    async update(id: number, record: Partial<BriefingRecord>): Promise<BriefingRecord> {
+        const response = await fetch(`${API_URL}/api/briefing/${id}/`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(record),
+        });
+        if (!response.ok) throw new Error('Erro ao atualizar registro de briefing');
+        return response.json();
+    },
 };
