@@ -1,5 +1,12 @@
 ﻿import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { BoardingFormData } from "@/types/boarding";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +33,7 @@ export function AircraftDataCard({ formData, onChange, isCatraca2 }: AircraftDat
           <Label htmlFor="aeronave">Aeronave</Label>
           <Input
             id="aeronave"
-            placeholder="Ex: PT-ABC (5 caracteres)"
+            placeholder=""
             value={formData.aeronave}
             onChange={(e) => onChange("aeronave", e.target.value)}
             maxLength={5}
@@ -35,12 +42,20 @@ export function AircraftDataCard({ formData, onChange, isCatraca2 }: AircraftDat
 
         <div className="space-y-2">
           <Label htmlFor="operadorAereo">Operador Aéreo</Label>
-          <Input
-            id="operadorAereo"
-            placeholder="Digite o operador aéreo"
+          <Select
             value={formData.operadorAereo}
-            onChange={(e) => onChange("operadorAereo", e.target.value)}
-          />
+            onValueChange={(value) => onChange("operadorAereo", value)}
+          >
+            <SelectTrigger id="operadorAereo">
+              <SelectValue placeholder="Selecione o operador" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Omni Taxi Aéreo">Omni Taxi Aéreo</SelectItem>
+              <SelectItem value="Bristow Taxi Aéreo">Bristow Taxi Aéreo</SelectItem>
+              <SelectItem value="Líder Taxi Aéreo">Líder Taxi Aéreo</SelectItem>
+              <SelectItem value="CHC Brasil Taxi Aéreo">CHC Brasil Taxi Aéreo</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">

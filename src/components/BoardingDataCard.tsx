@@ -30,10 +30,9 @@ interface BoardingDataCardProps {
 }
 
 const clientesFinais = [
-  { value: "cliente1", label: "Cliente A" },
-  { value: "cliente2", label: "Cliente B" },
-  { value: "cliente3", label: "Cliente C" },
-  { value: "cliente4", label: "Operador Logístico D" },
+  { value: "Petrobras", label: "Petrobras" },
+  { value: "Prio", label: "Prio" },
+  { value: "Spot", label: "Spot" },
 ];
 
 export function BoardingDataCard({
