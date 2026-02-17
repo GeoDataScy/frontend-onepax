@@ -5,6 +5,7 @@ export interface BriefingRecord {
     companhia_aerea: string;
     cliente_final: string;
     data: string;           // "DD/MM/AAAA"
+    prefixo_aeronave?: string; // máx 50 caracteres, opcional
     numero_voo: number;
     unidade_maritima: string;
     horario: string;        // "HH:MM"

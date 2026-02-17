@@ -22,6 +22,7 @@ const EMPTY_FORM = {
     companhia_aerea: "",
     cliente_final: "",
     data: "",
+    prefixo_aeronave: "",
     numero_voo: "",
     unidade_maritima: "",
     horario: "",
@@ -33,7 +34,7 @@ const EMPTY_FORM = {
 function SkeletonRow() {
     return (
         <tr>
-            {Array.from({ length: 8 }).map((_, i) => (
+            {Array.from({ length: 9 }).map((_, i) => (
                 <td key={i} className="px-5 py-4">
                     <div
                         className="h-4 rounded"
@@ -378,6 +379,26 @@ export default function Briefing() {
                                     </div>
                                 </div>
 
+                                {/* Prefixo da Aeronave */}
+                                <div>
+                                    <label style={labelStyle}>Prefixo da Aeronave</label>
+                                    <input
+                                        type="text"
+                                        value={form.prefixo_aeronave}
+                                        onChange={(e) => updateField("prefixo_aeronave", e.target.value.slice(0, 50))}
+                                        maxLength={50}
+                                        style={inputStyle}
+                                        onFocus={(e) => {
+                                            e.target.style.borderColor = colors.accent;
+                                            e.target.style.boxShadow = `0 0 0 3px ${colors.accent}20`;
+                                        }}
+                                        onBlur={(e) => {
+                                            e.target.style.borderColor = colors.border;
+                                            e.target.style.boxShadow = "none";
+                                        }}
+                                    />
+                                </div>
+
                                 {/* Número do Voo */}
                                 <div>
                                     <label style={labelStyle}>Número do Voo</label>
@@ -614,6 +635,7 @@ export default function Briefing() {
                                         "Companhia",
                                         "Cliente Final",
                                         "Data",
+                                        "Prefixo Aeronave",
                                         "Voo",
                                         "Unid. Marítima",
                                         "Horário",
@@ -649,7 +671,7 @@ export default function Briefing() {
                                 ) : records.length === 0 ? (
                                     <tr>
                                         <td
-                                            colSpan={8}
+                                            colSpan={9}
                                             style={{
                                                 padding: "64px 20px",
                                                 textAlign: "center",
@@ -711,6 +733,7 @@ export default function Briefing() {
                                             <td style={cellStyle}>{record.companhia_aerea}</td>
                                             <td style={cellStyle}>{record.cliente_final}</td>
                                             <td style={cellStyle}>{record.data}</td>
+                                            <td style={cellStyle}>{record.prefixo_aeronave ?? "—"}</td>
                                             <td style={cellStyle}>{record.numero_voo}</td>
                                             <td style={cellStyle}>{record.unidade_maritima}</td>
                                             <td style={cellStyle}>{record.horario}</td>
