@@ -16,7 +16,7 @@ export const catraca2Service = {
   },
 
   async liberarPassageiro(): Promise<void> {
-    const res = await fetch(`${API_URL}/push/?deviceId=${ID_CATRACA_2}`);
+    const res = await fetch(`${API_URL}/api/catraca-push/${ID_CATRACA_2}/enable/`, { method: "POST" });
     if (!res.ok) throw new Error(`Erro ao liberar Catraca 2: ${res.status}`);
   },
 
