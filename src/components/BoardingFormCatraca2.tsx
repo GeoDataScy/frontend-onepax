@@ -99,7 +99,7 @@ export function BoardingFormCatraca2({
   const handleLiberar = async () => {
     try {
       await catraca2Service.liberarPassageiro();
-      toast.success("Comando enviado para a Catraca 2!");
+      toast.success("Comando enviado para a Catraca 2 (Horário)!");
     } catch (error) {
       toast.error("Falha ao enviar comando para a Catraca 2.");
     }
