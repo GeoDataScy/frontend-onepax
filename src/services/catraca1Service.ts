@@ -6,9 +6,6 @@ const ID_CATRACA_1 = "1001";
 export const catraca1Service = {
   async habilitarCatraca(): Promise<void> {
     console.log(`[Catraca 1] Habilitando Push para ID ${ID_CATRACA_1}`);
-    // Primeiro garantimos que o voo está iniciado globalmente
-    await fetch(`${API_URL}/start-emb-flight/`, { method: "POST" });
-    // DEPOIS habilitamos especificamente o push desta catraca
     await fetch(`${API_URL}/api/catraca-push/${ID_CATRACA_1}/enable/`, { method: "POST" });
   },
 

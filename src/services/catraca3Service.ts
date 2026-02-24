@@ -6,9 +6,6 @@ const ID_CATRACA_3 = "1003"; // 3ª Catraca para Desembarque
 export const catraca3Service = {
     async habilitarCatraca(): Promise<void> {
         console.log(`[Catraca 3] Habilitando Push para ID ${ID_CATRACA_3}`);
-        // Inicia o voo de desembarque globalmente
-        await fetch(`${API_URL}/start-desemb-flight/`, { method: "POST" });
-        // Habilita especificamente o push desta catraca
         await fetch(`${API_URL}/api/catraca-push/${ID_CATRACA_3}/enable/`, { method: "POST" });
     },
 
