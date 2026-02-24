@@ -65,7 +65,12 @@ export function DisembarkingFormCatraca3({
     };
 
     const handleLiberar = async () => {
-        console.info("Aguardando giro fÃ­sico na Catraca 3...");
+        try {
+            await catraca3Service.liberarPassageiro();
+            toast.success("Comando enviado para a Catraca 3!");
+        } catch (error) {
+            toast.error("Falha ao enviar comando para a Catraca 3.");
+        }
     };
 
     return (

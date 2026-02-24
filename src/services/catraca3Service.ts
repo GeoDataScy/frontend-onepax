@@ -19,7 +19,8 @@ export const catraca3Service = {
     },
 
     async liberarPassageiro(): Promise<void> {
-        console.log("Simulação manual desativada.");
+        const res = await fetch(`${API_URL}/desembarque/push/?deviceId=${ID_CATRACA_3}`);
+        if (!res.ok) throw new Error(`Erro ao liberar Catraca 3: ${res.status}`);
     },
 
     async contarEventos(): Promise<number> {

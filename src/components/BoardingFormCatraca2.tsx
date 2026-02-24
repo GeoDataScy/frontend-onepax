@@ -97,7 +97,12 @@ export function BoardingFormCatraca2({
   };
 
   const handleLiberar = async () => {
-    console.info("Aguardando giro físico na Catraca 2...");
+    try {
+      await catraca2Service.liberarPassageiro();
+      toast.success("Comando enviado para a Catraca 2!");
+    } catch (error) {
+      toast.error("Falha ao enviar comando para a Catraca 2.");
+    }
   };
 
   return (
