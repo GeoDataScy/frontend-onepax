@@ -6,7 +6,7 @@ const ID_CATRACA_1 = "1001";
 export const catraca1Service = {
   async habilitarCatraca(): Promise<void> {
     console.log(`[Catraca 1] Habilitando Push para ID ${ID_CATRACA_1}`);
-    await fetch(`${API_URL}/api/catraca-push/${ID_CATRACA_1}/enable/`, { method: "POST" });
+    await fetch(`${API_URL}/api/catraca-push/${ID_CATRACA_1}/reset/`, { method: "POST" });
   },
 
   async encerrarVoo(): Promise<void> {
