@@ -58,10 +58,11 @@ export function BoardingFormCatraca2({
   const handleHabilitar = async () => {
     try {
       await catraca2Service.habilitarCatraca();
+      setPassageirosEmbarcados(0); // Zera o contador imediatamente na UI
       setIsEnabled(true);
-      console.log("Catraca 2 habilitada!");
+      toast.success("Catraca 2 habilitada — contador zerado!");
     } catch (error) {
-      console.error("Erro ao habilitar Catraca 2");
+      toast.error("Erro ao habilitar Catraca 2");
     }
   };
 
