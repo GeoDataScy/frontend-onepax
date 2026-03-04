@@ -86,7 +86,7 @@ export function AircraftDataCard({ formData, onChange, isCatraca2 }: AircraftDat
           <Label htmlFor="plataforma">Plataforma</Label>
           <Input
             id="plataforma"
-            placeholder="P57"
+            placeholder="EX: P57"
             value={formData.plataforma}
             onChange={(e) => {
               const val = e.target.value.toUpperCase();
