@@ -51,4 +51,12 @@ export const transporteService = {
         if (!response.ok) throw new Error('Erro ao atualizar registro de transporte');
         return response.json();
     },
+
+    async delete(id: number): Promise<void> {
+        const response = await fetch(`${API_URL}/api/transporte/${id}/`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Erro ao deletar registro de transporte');
+    },
 };

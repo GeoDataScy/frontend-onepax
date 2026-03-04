@@ -58,4 +58,12 @@ export const briefingService = {
         if (!response.ok) throw new Error('Erro ao atualizar registro de briefing');
         return response.json();
     },
+
+    async delete(id: number): Promise<void> {
+        const response = await fetch(`${API_URL}/api/briefing/${id}/`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Erro ao deletar registro de briefing');
+    },
 };

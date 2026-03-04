@@ -39,4 +39,12 @@ export const desembarqueService = {
         if (!response.ok) throw new Error('Erro ao atualizar registro de desembarque');
         return response.json();
     },
+
+    async delete(id: number): Promise<void> {
+        const response = await fetch(`${API_URL}/api/desembarque/${id}/`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Erro ao deletar registro de desembarque');
+    },
 };

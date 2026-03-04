@@ -15,7 +15,8 @@ import {
     Loader2,
     Menu,
     Filter,
-    RotateCcw
+    RotateCcw,
+    Trash2
 } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
@@ -306,6 +307,17 @@ export default function Supervisor() {
             toast.error("Erro ao atualizar registro");
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleDelete = async (record: any) => {
+        if (!window.confirm("Tem certeza que deseja deletar este registro?")) return;
+        try {
+            await activeConfig.service.delete(record.id);
+            toast.success("Registro deletado com sucesso");
+            fetchRecords();
+        } catch {
+            toast.error("Erro ao deletar registro");
         }
     };
 
@@ -714,19 +726,40 @@ export default function Supervisor() {
                                                     </td>
                                                 ))}
                                                 <td style={{ padding: "14px 20px", textAlign: "right" }}>
-                                                    <button
-                                                        onClick={() => handleEdit(record)}
-                                                        style={{
-                                                            background: "transparent",
-                                                            border: "none",
-                                                            cursor: "pointer",
-                                                            color: colors.textMuted,
-                                                            padding: "4px",
-                                                        }}
-                                                        title="Editar"
-                                                    >
-                                                        <Edit2 size={16} />
-                                                    </button>
+                                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "8px" }}>
+                                                        <button
+                                                            onClick={() => handleEdit(record)}
+                                                            style={{
+                                                                background: "transparent",
+                                                                border: "none",
+                                                                cursor: "pointer",
+                                                                color: colors.textMuted,
+                                                                padding: "4px",
+                                                                transition: "color 0.2s",
+                                                            }}
+                                                            title="Editar"
+                                                            onMouseEnter={(e) => { e.currentTarget.style.color = colors.text; }}
+                                                            onMouseLeave={(e) => { e.currentTarget.style.color = colors.textMuted; }}
+                                                        >
+                                                            <Edit2 size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(record)}
+                                                            style={{
+                                                                background: "transparent",
+                                                                border: "none",
+                                                                cursor: "pointer",
+                                                                color: colors.textMuted,
+                                                                padding: "4px",
+                                                                transition: "color 0.2s",
+                                                            }}
+                                                            title="Deletar"
+                                                            onMouseEnter={(e) => { e.currentTarget.style.color = "#dc2626"; }}
+                                                            onMouseLeave={(e) => { e.currentTarget.style.color = colors.textMuted; }}
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
