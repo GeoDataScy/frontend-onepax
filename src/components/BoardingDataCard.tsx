@@ -21,6 +21,7 @@ import {
 import { BoardingFormData } from "@/types/boarding";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { platformIcaoMap } from "@/data/platformIcaoMap";
 
 interface BoardingDataCardProps {
   formData: BoardingFormData;
@@ -146,6 +147,7 @@ export function BoardingDataCard({
               placeholder="Digite o código ICAO"
               value={formData.icao}
               onChange={(e) => onChange("icao", e.target.value)}
+              disabled={!!platformIcaoMap[formData.plataforma]}
             />
           </div>
 

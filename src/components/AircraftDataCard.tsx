@@ -10,6 +10,7 @@ import {
 import { BoardingFormData } from "@/types/boarding";
 import { cn } from "@/lib/utils";
 import { aircraftOperatorMap } from "@/data/aircraftOperatorMap";
+import { platformIcaoMap } from "@/data/platformIcaoMap";
 
 interface AircraftDataCardProps {
   formData: BoardingFormData;
@@ -87,7 +88,16 @@ export function AircraftDataCard({ formData, onChange, isCatraca2 }: AircraftDat
             id="plataforma"
             placeholder="Ex: P-01"
             value={formData.plataforma}
-            onChange={(e) => onChange("plataforma", e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value.toUpperCase();
+              onChange("plataforma", val);
+              const icao = platformIcaoMap[val];
+              if (icao) {
+                onChange("icao", icao);
+              } else {
+                onChange("icao", "");
+              }
+            }}
           />
         </div>
       </div>
