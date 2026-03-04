@@ -35,7 +35,10 @@ export function AircraftDataCard({ formData, onChange, isCatraca2 }: AircraftDat
             id="aeronave"
             placeholder=""
             value={formData.aeronave}
-            onChange={(e) => onChange("aeronave", e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value.toUpperCase().replace(/\s/g, "");
+              onChange("aeronave", val);
+            }}
             maxLength={5}
           />
         </div>
