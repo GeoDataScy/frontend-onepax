@@ -94,8 +94,10 @@ export default function Transporte() {
 
         try {
             setIsSending(true);
+            const [dd, mm, yyyy] = form.data.split("/");
             await transporteService.create({
                 ...form,
+                data: `${yyyy}-${mm}-${dd}`,
                 numero_voo: parseInt(form.numero_voo, 10),
             });
             toast.success("Registro criado com sucesso");
