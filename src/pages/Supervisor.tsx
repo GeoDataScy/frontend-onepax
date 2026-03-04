@@ -5,7 +5,6 @@ import { desembarqueService, DesembarqueRecord } from "@/services/desembarqueSer
 import { briefingService, BriefingRecord } from "@/services/briefingService";
 import { transporteService, TransporteRecord } from "@/services/transporteService";
 import {
-    LayoutDashboard,
     PlaneTakeoff,
     PlaneLanding,
     FileText,
@@ -14,7 +13,9 @@ import {
     X,
     Save,
     Loader2,
-    Menu
+    Menu,
+    Filter,
+    RotateCcw
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -201,8 +202,50 @@ export default function Supervisor() {
     const [editingRecord, setEditingRecord] = useState<any | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [filterDateStart, setFilterDateStart] = useState("");
+    const [filterDateEnd, setFilterDateEnd] = useState("");
+    const [filterOperadora, setFilterOperadora] = useState("");
+    const [filterCliente, setFilterCliente] = useState("");
 
     const activeConfig = MODULE_CONFIG[activeModule];
+
+    /* Clear filters on module change */
+    useEffect(() => {
+        setFilterDateStart("");
+        setFilterDateEnd("");
+        setFilterOperadora("");
+        setFilterCliente("");
+    }, [activeModule]);
+
+    /* Filter helpers */
+    const getDateKey = (module: ModuleType) => {
+        if (module === "embarque") return "departure_date";
+        if (module === "desembarque") return "arrival_date";
+        return "data";
+    };
+
+    const getOperadoraKey = (module: ModuleType) => {
+        if (module === "embarque" || module === "desembarque") return "operadora";
+        if (module === "briefing") return "companhia_aerea";
+        return "empresa_solicitante";
+    };
+
+    const filteredRecords = records.filter((record) => {
+        const dateKey = getDateKey(activeModule);
+        const operadoraKey = getOperadoraKey(activeModule);
+        const recordDate = record[dateKey] || "";
+
+        if (filterDateStart && recordDate < filterDateStart) return false;
+        if (filterDateEnd && recordDate > filterDateEnd) return false;
+        if (filterOperadora && record[operadoraKey] !== filterOperadora) return false;
+        if (filterCliente && record.cliente_final !== filterCliente) return false;
+
+        return true;
+    });
+
+    const uniqueOperadoras = [...new Set(records.map((r) => r[getOperadoraKey(activeModule)]).filter(Boolean))].sort();
+    const uniqueClientes = [...new Set(records.map((r) => r.cliente_final).filter(Boolean))].sort();
+    const hasActiveFilters = filterDateStart || filterDateEnd || filterOperadora || filterCliente;
 
     /* Fetch Data */
     const fetchRecords = useCallback(async () => {
@@ -345,10 +388,158 @@ export default function Supervisor() {
                                     {activeConfig.label}
                                 </h1>
                                 <p style={{ fontSize: "13px", color: colors.textMuted, marginTop: "4px" }}>
-                                    {records.length} registro{records.length !== 1 ? "s" : ""} encontrados
+                                    {filteredRecords.length} de {records.length} registro{records.length !== 1 ? "s" : ""}
                                 </p>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Filters */}
+                    <div
+                        style={{
+                            backgroundColor: colors.white,
+                            border: `1px solid ${colors.border}`,
+                            borderRadius: "6px",
+                            padding: "16px 20px",
+                            marginBottom: "16px",
+                            display: "flex",
+                            flexWrap: "wrap",
+                            alignItems: "flex-end",
+                            gap: "16px",
+                        }}
+                    >
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", color: colors.textMuted, fontSize: "13px", fontWeight: 500, fontFamily: "'Inter', sans-serif" }}>
+                            <Filter size={14} />
+                            Filtros
+                        </div>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                            <label style={{ fontSize: "11px", fontWeight: 500, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: "'Inter', sans-serif" }}>
+                                Data Início
+                            </label>
+                            <input
+                                type="date"
+                                value={filterDateStart}
+                                onChange={(e) => setFilterDateStart(e.target.value)}
+                                style={{
+                                    height: "36px",
+                                    padding: "0 10px",
+                                    border: `1px solid ${colors.border}`,
+                                    borderRadius: "4px",
+                                    fontSize: "13px",
+                                    color: colors.text,
+                                    backgroundColor: colors.white,
+                                    fontFamily: "'Inter', sans-serif",
+                                    outline: "none",
+                                }}
+                            />
+                        </div>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                            <label style={{ fontSize: "11px", fontWeight: 500, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: "'Inter', sans-serif" }}>
+                                Data Fim
+                            </label>
+                            <input
+                                type="date"
+                                value={filterDateEnd}
+                                onChange={(e) => setFilterDateEnd(e.target.value)}
+                                style={{
+                                    height: "36px",
+                                    padding: "0 10px",
+                                    border: `1px solid ${colors.border}`,
+                                    borderRadius: "4px",
+                                    fontSize: "13px",
+                                    color: colors.text,
+                                    backgroundColor: colors.white,
+                                    fontFamily: "'Inter', sans-serif",
+                                    outline: "none",
+                                }}
+                            />
+                        </div>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                            <label style={{ fontSize: "11px", fontWeight: 500, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: "'Inter', sans-serif" }}>
+                                Operadora
+                            </label>
+                            <select
+                                value={filterOperadora}
+                                onChange={(e) => setFilterOperadora(e.target.value)}
+                                style={{
+                                    height: "36px",
+                                    padding: "0 10px",
+                                    border: `1px solid ${colors.border}`,
+                                    borderRadius: "4px",
+                                    fontSize: "13px",
+                                    color: filterOperadora ? colors.text : colors.textMuted,
+                                    backgroundColor: colors.white,
+                                    fontFamily: "'Inter', sans-serif",
+                                    outline: "none",
+                                    minWidth: "160px",
+                                }}
+                            >
+                                <option value="">Todas</option>
+                                {uniqueOperadoras.map((op) => (
+                                    <option key={op} value={op}>{op}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                            <label style={{ fontSize: "11px", fontWeight: 500, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: "'Inter', sans-serif" }}>
+                                Cliente Final
+                            </label>
+                            <select
+                                value={filterCliente}
+                                onChange={(e) => setFilterCliente(e.target.value)}
+                                style={{
+                                    height: "36px",
+                                    padding: "0 10px",
+                                    border: `1px solid ${colors.border}`,
+                                    borderRadius: "4px",
+                                    fontSize: "13px",
+                                    color: filterCliente ? colors.text : colors.textMuted,
+                                    backgroundColor: colors.white,
+                                    fontFamily: "'Inter', sans-serif",
+                                    outline: "none",
+                                    minWidth: "140px",
+                                }}
+                            >
+                                <option value="">Todos</option>
+                                {uniqueClientes.map((cl) => (
+                                    <option key={cl} value={cl}>{cl}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {hasActiveFilters && (
+                            <button
+                                onClick={() => {
+                                    setFilterDateStart("");
+                                    setFilterDateEnd("");
+                                    setFilterOperadora("");
+                                    setFilterCliente("");
+                                }}
+                                style={{
+                                    height: "36px",
+                                    padding: "0 14px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "6px",
+                                    backgroundColor: colors.card,
+                                    color: colors.text,
+                                    border: `1px solid ${colors.border}`,
+                                    borderRadius: "4px",
+                                    fontSize: "12px",
+                                    fontWeight: 500,
+                                    fontFamily: "'Inter', sans-serif",
+                                    cursor: "pointer",
+                                    transition: "background-color 0.2s",
+                                }}
+                            >
+                                <RotateCcw size={13} />
+                                Limpar
+                            </button>
+                        )}
                     </div>
 
                     {/* Table */}
@@ -390,18 +581,18 @@ export default function Supervisor() {
                                                 <Loader2 className="animate-spin mx-auto text-muted-foreground" />
                                             </td>
                                         </tr>
-                                    ) : records.length === 0 ? (
+                                    ) : filteredRecords.length === 0 ? (
                                         <tr>
                                             <td colSpan={activeConfig.columns.length + 1} style={{ padding: "40px", textAlign: "center", color: colors.textMuted, fontSize: "14px" }}>
                                                 Nenhum registro encontrado.
                                             </td>
                                         </tr>
                                     ) : (
-                                        records.map((record, idx) => (
+                                        filteredRecords.map((record, idx) => (
                                             <tr
                                                 key={record.id || idx}
                                                 style={{
-                                                    borderBottom: idx < records.length - 1 ? `1px solid ${colors.border}` : "none",
+                                                    borderBottom: idx < filteredRecords.length - 1 ? `1px solid ${colors.border}` : "none",
                                                     transition: "background-color 0.15s",
                                                 }}
                                                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.bg)}
