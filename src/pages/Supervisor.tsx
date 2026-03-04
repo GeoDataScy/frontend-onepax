@@ -18,6 +18,7 @@ import {
     RotateCcw
 } from "lucide-react";
 import { toast } from "sonner";
+import * as XLSX from "xlsx";
 
 /* ─── Types & Config ─── */
 type ModuleType = "embarque" | "desembarque" | "briefing" | "transporte";
@@ -247,6 +248,26 @@ export default function Supervisor() {
     const uniqueClientes = [...new Set(records.map((r) => r.cliente_final).filter(Boolean))].sort();
     const hasActiveFilters = filterDateStart || filterDateEnd || filterOperadora || filterCliente;
 
+    /* Export to Excel */
+    const handleExportExcel = () => {
+        if (filteredRecords.length === 0) {
+            toast.error("Nenhum registro para exportar");
+            return;
+        }
+        const exportData = filteredRecords.map((record) => {
+            const row: Record<string, any> = {};
+            activeConfig.columns.forEach((col) => {
+                row[col.label] = col.format ? col.format(record[col.key]) : record[col.key];
+            });
+            return row;
+        });
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, activeConfig.label);
+        XLSX.writeFile(wb, `${activeConfig.label}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        toast.success("Exportado com sucesso");
+    };
+
     /* Fetch Data */
     const fetchRecords = useCallback(async () => {
         try {
@@ -400,146 +421,233 @@ export default function Supervisor() {
                             backgroundColor: colors.white,
                             border: `1px solid ${colors.border}`,
                             borderRadius: "6px",
-                            padding: "16px 20px",
+                            padding: "14px 20px",
                             marginBottom: "16px",
-                            display: "flex",
-                            flexWrap: "wrap",
-                            alignItems: "flex-end",
-                            gap: "16px",
                         }}
                     >
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px", color: colors.textMuted, fontSize: "13px", fontWeight: 500, fontFamily: "'Inter', sans-serif" }}>
-                            <Filter size={14} />
-                            Filtros
-                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                            {/* Filter icon + label */}
+                            <div style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                color: colors.textMuted,
+                                fontSize: "12px",
+                                fontWeight: 600,
+                                fontFamily: "'Inter', sans-serif",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.06em",
+                                whiteSpace: "nowrap",
+                                paddingRight: "4px",
+                                borderRight: `1px solid ${colors.border}`,
+                                marginRight: "4px",
+                                height: "36px",
+                            }}>
+                                <Filter size={13} />
+                                Filtros
+                            </div>
 
-                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                            <label style={{ fontSize: "11px", fontWeight: 500, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: "'Inter', sans-serif" }}>
-                                Data Início
-                            </label>
-                            <input
-                                type="date"
-                                value={filterDateStart}
-                                onChange={(e) => setFilterDateStart(e.target.value)}
-                                style={{
-                                    height: "36px",
-                                    padding: "0 10px",
-                                    border: `1px solid ${colors.border}`,
-                                    borderRadius: "4px",
-                                    fontSize: "13px",
-                                    color: colors.text,
-                                    backgroundColor: colors.white,
-                                    fontFamily: "'Inter', sans-serif",
-                                    outline: "none",
-                                }}
-                            />
-                        </div>
+                            {/* Filter fields row */}
+                            <div style={{ display: "flex", flex: 1, alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                                <input
+                                    type="date"
+                                    value={filterDateStart}
+                                    onChange={(e) => setFilterDateStart(e.target.value)}
+                                    title="Data Início"
+                                    style={{
+                                        height: "36px",
+                                        padding: "0 10px",
+                                        border: `1px solid ${colors.border}`,
+                                        borderRadius: "6px",
+                                        fontSize: "13px",
+                                        color: filterDateStart ? colors.text : colors.textMuted,
+                                        backgroundColor: colors.bg,
+                                        fontFamily: "'Inter', sans-serif",
+                                        outline: "none",
+                                        flex: "1 1 130px",
+                                        minWidth: "130px",
+                                        maxWidth: "160px",
+                                        transition: "border-color 0.2s",
+                                    }}
+                                    onFocus={(e) => { e.target.style.borderColor = colors.accent; }}
+                                    onBlur={(e) => { e.target.style.borderColor = colors.border; }}
+                                />
 
-                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                            <label style={{ fontSize: "11px", fontWeight: 500, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: "'Inter', sans-serif" }}>
-                                Data Fim
-                            </label>
-                            <input
-                                type="date"
-                                value={filterDateEnd}
-                                onChange={(e) => setFilterDateEnd(e.target.value)}
-                                style={{
-                                    height: "36px",
-                                    padding: "0 10px",
-                                    border: `1px solid ${colors.border}`,
-                                    borderRadius: "4px",
-                                    fontSize: "13px",
-                                    color: colors.text,
-                                    backgroundColor: colors.white,
-                                    fontFamily: "'Inter', sans-serif",
-                                    outline: "none",
-                                }}
-                            />
-                        </div>
+                                <span style={{ color: colors.textMuted, fontSize: "12px", fontFamily: "'Inter', sans-serif" }}>até</span>
 
-                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                            <label style={{ fontSize: "11px", fontWeight: 500, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: "'Inter', sans-serif" }}>
-                                Operadora
-                            </label>
-                            <select
-                                value={filterOperadora}
-                                onChange={(e) => setFilterOperadora(e.target.value)}
-                                style={{
-                                    height: "36px",
-                                    padding: "0 10px",
-                                    border: `1px solid ${colors.border}`,
-                                    borderRadius: "4px",
-                                    fontSize: "13px",
-                                    color: filterOperadora ? colors.text : colors.textMuted,
-                                    backgroundColor: colors.white,
-                                    fontFamily: "'Inter', sans-serif",
-                                    outline: "none",
-                                    minWidth: "160px",
-                                }}
-                            >
-                                <option value="">Todas</option>
-                                {uniqueOperadoras.map((op) => (
-                                    <option key={op} value={op}>{op}</option>
-                                ))}
-                            </select>
-                        </div>
+                                <input
+                                    type="date"
+                                    value={filterDateEnd}
+                                    onChange={(e) => setFilterDateEnd(e.target.value)}
+                                    title="Data Fim"
+                                    style={{
+                                        height: "36px",
+                                        padding: "0 10px",
+                                        border: `1px solid ${colors.border}`,
+                                        borderRadius: "6px",
+                                        fontSize: "13px",
+                                        color: filterDateEnd ? colors.text : colors.textMuted,
+                                        backgroundColor: colors.bg,
+                                        fontFamily: "'Inter', sans-serif",
+                                        outline: "none",
+                                        flex: "1 1 130px",
+                                        minWidth: "130px",
+                                        maxWidth: "160px",
+                                        transition: "border-color 0.2s",
+                                    }}
+                                    onFocus={(e) => { e.target.style.borderColor = colors.accent; }}
+                                    onBlur={(e) => { e.target.style.borderColor = colors.border; }}
+                                />
 
-                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                            <label style={{ fontSize: "11px", fontWeight: 500, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: "'Inter', sans-serif" }}>
-                                Cliente Final
-                            </label>
-                            <select
-                                value={filterCliente}
-                                onChange={(e) => setFilterCliente(e.target.value)}
-                                style={{
-                                    height: "36px",
-                                    padding: "0 10px",
-                                    border: `1px solid ${colors.border}`,
-                                    borderRadius: "4px",
-                                    fontSize: "13px",
-                                    color: filterCliente ? colors.text : colors.textMuted,
-                                    backgroundColor: colors.white,
-                                    fontFamily: "'Inter', sans-serif",
-                                    outline: "none",
-                                    minWidth: "140px",
-                                }}
-                            >
-                                <option value="">Todos</option>
-                                {uniqueClientes.map((cl) => (
-                                    <option key={cl} value={cl}>{cl}</option>
-                                ))}
-                            </select>
-                        </div>
+                                <div style={{ width: "1px", height: "20px", backgroundColor: colors.border }} />
 
-                        {hasActiveFilters && (
+                                <select
+                                    value={filterOperadora}
+                                    onChange={(e) => setFilterOperadora(e.target.value)}
+                                    title="Operadora"
+                                    style={{
+                                        height: "36px",
+                                        padding: "0 28px 0 10px",
+                                        border: `1px solid ${colors.border}`,
+                                        borderRadius: "6px",
+                                        fontSize: "13px",
+                                        color: filterOperadora ? colors.text : colors.textMuted,
+                                        backgroundColor: colors.bg,
+                                        fontFamily: "'Inter', sans-serif",
+                                        outline: "none",
+                                        flex: "1 1 160px",
+                                        minWidth: "140px",
+                                        maxWidth: "200px",
+                                        appearance: "none",
+                                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+                                        backgroundRepeat: "no-repeat",
+                                        backgroundPosition: "right 10px center",
+                                        cursor: "pointer",
+                                        transition: "border-color 0.2s",
+                                    }}
+                                    onFocus={(e) => { e.target.style.borderColor = colors.accent; }}
+                                    onBlur={(e) => { e.target.style.borderColor = colors.border; }}
+                                >
+                                    <option value="">Operadora</option>
+                                    {uniqueOperadoras.map((op) => (
+                                        <option key={op} value={op}>{op}</option>
+                                    ))}
+                                </select>
+
+                                <select
+                                    value={filterCliente}
+                                    onChange={(e) => setFilterCliente(e.target.value)}
+                                    title="Cliente Final"
+                                    style={{
+                                        height: "36px",
+                                        padding: "0 28px 0 10px",
+                                        border: `1px solid ${colors.border}`,
+                                        borderRadius: "6px",
+                                        fontSize: "13px",
+                                        color: filterCliente ? colors.text : colors.textMuted,
+                                        backgroundColor: colors.bg,
+                                        fontFamily: "'Inter', sans-serif",
+                                        outline: "none",
+                                        flex: "1 1 130px",
+                                        minWidth: "120px",
+                                        maxWidth: "160px",
+                                        appearance: "none",
+                                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+                                        backgroundRepeat: "no-repeat",
+                                        backgroundPosition: "right 10px center",
+                                        cursor: "pointer",
+                                        transition: "border-color 0.2s",
+                                    }}
+                                    onFocus={(e) => { e.target.style.borderColor = colors.accent; }}
+                                    onBlur={(e) => { e.target.style.borderColor = colors.border; }}
+                                >
+                                    <option value="">Cliente</option>
+                                    {uniqueClientes.map((cl) => (
+                                        <option key={cl} value={cl}>{cl}</option>
+                                    ))}
+                                </select>
+
+                                {hasActiveFilters && (
+                                    <button
+                                        onClick={() => {
+                                            setFilterDateStart("");
+                                            setFilterDateEnd("");
+                                            setFilterOperadora("");
+                                            setFilterCliente("");
+                                        }}
+                                        title="Limpar filtros"
+                                        style={{
+                                            height: "36px",
+                                            width: "36px",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            backgroundColor: colors.bg,
+                                            color: colors.textMuted,
+                                            border: `1px solid ${colors.border}`,
+                                            borderRadius: "6px",
+                                            cursor: "pointer",
+                                            transition: "all 0.2s",
+                                            flexShrink: 0,
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = colors.border;
+                                            e.currentTarget.style.color = colors.text;
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = colors.bg;
+                                            e.currentTarget.style.color = colors.textMuted;
+                                        }}
+                                    >
+                                        <RotateCcw size={14} />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Divider */}
+                            <div style={{ width: "1px", height: "28px", backgroundColor: colors.border, flexShrink: 0 }} />
+
+                            {/* Export button */}
                             <button
-                                onClick={() => {
-                                    setFilterDateStart("");
-                                    setFilterDateEnd("");
-                                    setFilterOperadora("");
-                                    setFilterCliente("");
-                                }}
+                                onClick={handleExportExcel}
+                                title="Exportar para Excel"
                                 style={{
                                     height: "36px",
-                                    padding: "0 14px",
+                                    padding: "0 16px",
                                     display: "flex",
                                     alignItems: "center",
-                                    gap: "6px",
-                                    backgroundColor: colors.card,
-                                    color: colors.text,
-                                    border: `1px solid ${colors.border}`,
-                                    borderRadius: "4px",
-                                    fontSize: "12px",
+                                    gap: "8px",
+                                    backgroundColor: "#f0f7f0",
+                                    color: "#1a5c2a",
+                                    border: "1px solid #c3dcc8",
+                                    borderRadius: "6px",
+                                    fontSize: "13px",
                                     fontWeight: 500,
                                     fontFamily: "'Inter', sans-serif",
                                     cursor: "pointer",
-                                    transition: "background-color 0.2s",
+                                    transition: "all 0.2s",
+                                    whiteSpace: "nowrap",
+                                    flexShrink: 0,
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = "#e2f0e4";
+                                    e.currentTarget.style.borderColor = "#a8cdb0";
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = "#f0f7f0";
+                                    e.currentTarget.style.borderColor = "#c3dcc8";
                                 }}
                             >
-                                <RotateCcw size={13} />
-                                Limpar
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a5c2a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <line x1="8" y1="13" x2="16" y2="13" />
+                                    <line x1="8" y1="17" x2="16" y2="17" />
+                                    <line x1="12" y1="9" x2="12" y2="21" />
+                                </svg>
+                                Exportar
                             </button>
-                        )}
+                        </div>
                     </div>
 
                     {/* Table */}
