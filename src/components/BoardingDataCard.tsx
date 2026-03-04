@@ -144,7 +144,7 @@ export function BoardingDataCard({
             <Label htmlFor="icao">ICAO</Label>
             <Input
               id="icao"
-              placeholder="Digite o código ICAO"
+              placeholder="O código ICAO vai ser preenchido automaticamente"
               value={formData.icao}
               onChange={(e) => onChange("icao", e.target.value)}
               disabled={!!platformIcaoMap[formData.plataforma]}
