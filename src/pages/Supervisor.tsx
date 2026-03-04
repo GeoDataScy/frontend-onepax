@@ -16,7 +16,8 @@ import {
     Menu,
     Filter,
     RotateCcw,
-    Trash2
+    Trash2,
+    AlertTriangle
 } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
@@ -206,6 +207,8 @@ export default function Supervisor() {
     const [editingRecord, setEditingRecord] = useState<any | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [filterDateStart, setFilterDateStart] = useState("");
     const [filterDateEnd, setFilterDateEnd] = useState("");
     const [filterOperadora, setFilterOperadora] = useState("");
@@ -310,15 +313,33 @@ export default function Supervisor() {
         }
     };
 
-    const handleDelete = async (record: any) => {
-        if (!window.confirm("Tem certeza que deseja deletar este registro?")) return;
+    const handleDelete = (record: any) => {
+        setDeleteTarget(record);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
         try {
-            await activeConfig.service.delete(record.id);
+            setIsDeleting(true);
+            await activeConfig.service.delete(deleteTarget.id);
             toast.success("Registro deletado com sucesso");
+            setDeleteTarget(null);
             fetchRecords();
         } catch {
             toast.error("Erro ao deletar registro");
+        } finally {
+            setIsDeleting(false);
         }
+    };
+
+    const getDeleteInfo = (record: any) => {
+        if (activeModule === "embarque" || activeModule === "desembarque") {
+            return { voo: record.flight_number, operadora: record.operadora };
+        }
+        if (activeModule === "briefing") {
+            return { voo: record.numero_voo, operadora: record.companhia_aerea };
+        }
+        return { voo: record.numero_voo, operadora: record.empresa_solicitante };
     };
 
     const updateEditField = (key: string, value: any) => {
@@ -770,6 +791,206 @@ export default function Supervisor() {
                     </div>
                 </main>
             </div>
+
+            {/* ── Delete Confirmation Modal ── */}
+            {deleteTarget && (() => {
+                const info = getDeleteInfo(deleteTarget);
+                return (
+                    <div
+                        style={{
+                            position: "fixed",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: "rgba(0,0,0,0.45)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            zIndex: 60,
+                            padding: "20px",
+                        }}
+                        onClick={() => setDeleteTarget(null)}
+                    >
+                        <div
+                            style={{
+                                backgroundColor: colors.white,
+                                borderRadius: "10px",
+                                width: "100%",
+                                maxWidth: "420px",
+                                boxShadow: "0 20px 40px -8px rgba(0,0,0,0.15)",
+                                overflow: "hidden",
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Warning header */}
+                            <div style={{
+                                padding: "24px 24px 0",
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                gap: "16px",
+                            }}>
+                                <div style={{
+                                    width: "48px",
+                                    height: "48px",
+                                    borderRadius: "50%",
+                                    backgroundColor: "#fef3c7",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}>
+                                    <AlertTriangle size={24} style={{ color: "#d97706" }} />
+                                </div>
+                                <h3 style={{
+                                    fontSize: "17px",
+                                    fontWeight: 600,
+                                    color: colors.text,
+                                    fontFamily: "'Inter', sans-serif",
+                                    margin: 0,
+                                    textAlign: "center",
+                                }}>
+                                    Confirmar exclusão
+                                </h3>
+                            </div>
+
+                            {/* Record info */}
+                            <div style={{ padding: "16px 24px 0", textAlign: "center" }}>
+                                <p style={{
+                                    fontSize: "13px",
+                                    color: colors.textMuted,
+                                    fontFamily: "'Inter', sans-serif",
+                                    margin: "0 0 12px",
+                                    lineHeight: "1.5",
+                                }}>
+                                    Você está prestes a deletar o seguinte registro:
+                                </p>
+                                <div style={{
+                                    backgroundColor: colors.bg,
+                                    border: `1px solid ${colors.border}`,
+                                    borderRadius: "8px",
+                                    padding: "14px 18px",
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    gap: "24px",
+                                }}>
+                                    <div>
+                                        <span style={{
+                                            display: "block",
+                                            fontSize: "10px",
+                                            fontWeight: 600,
+                                            color: colors.textMuted,
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.08em",
+                                            marginBottom: "4px",
+                                            fontFamily: "'Inter', sans-serif",
+                                        }}>Voo</span>
+                                        <span style={{
+                                            fontSize: "15px",
+                                            fontWeight: 600,
+                                            color: colors.text,
+                                            fontFamily: "'Inter', sans-serif",
+                                        }}>{info.voo || "—"}</span>
+                                    </div>
+                                    <div style={{ width: "1px", backgroundColor: colors.border }} />
+                                    <div>
+                                        <span style={{
+                                            display: "block",
+                                            fontSize: "10px",
+                                            fontWeight: 600,
+                                            color: colors.textMuted,
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.08em",
+                                            marginBottom: "4px",
+                                            fontFamily: "'Inter', sans-serif",
+                                        }}>Operadora</span>
+                                        <span style={{
+                                            fontSize: "15px",
+                                            fontWeight: 600,
+                                            color: colors.text,
+                                            fontFamily: "'Inter', sans-serif",
+                                        }}>{info.operadora || "—"}</span>
+                                    </div>
+                                </div>
+                                <p style={{
+                                    fontSize: "12px",
+                                    color: "#b45309",
+                                    fontFamily: "'Inter', sans-serif",
+                                    margin: "12px 0 0",
+                                    fontWeight: 500,
+                                }}>
+                                    Esta ação não pode ser desfeita.
+                                </p>
+                            </div>
+
+                            {/* Buttons */}
+                            <div style={{
+                                padding: "20px 24px 24px",
+                                display: "flex",
+                                gap: "10px",
+                                justifyContent: "center",
+                            }}>
+                                <button
+                                    onClick={() => setDeleteTarget(null)}
+                                    style={{
+                                        flex: 1,
+                                        height: "40px",
+                                        borderRadius: "6px",
+                                        border: `1px solid ${colors.border}`,
+                                        backgroundColor: colors.white,
+                                        color: colors.text,
+                                        fontSize: "13px",
+                                        fontWeight: 500,
+                                        fontFamily: "'Inter', sans-serif",
+                                        cursor: "pointer",
+                                        transition: "background-color 0.2s",
+                                    }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = colors.bg; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.white; }}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    disabled={isDeleting}
+                                    style={{
+                                        flex: 1,
+                                        height: "40px",
+                                        borderRadius: "6px",
+                                        border: "none",
+                                        backgroundColor: "#dc2626",
+                                        color: "#ffffff",
+                                        fontSize: "13px",
+                                        fontWeight: 500,
+                                        fontFamily: "'Inter', sans-serif",
+                                        cursor: isDeleting ? "not-allowed" : "pointer",
+                                        opacity: isDeleting ? 0.7 : 1,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: "8px",
+                                        transition: "background-color 0.2s",
+                                    }}
+                                    onMouseEnter={(e) => { if (!isDeleting) e.currentTarget.style.backgroundColor = "#b91c1c"; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#dc2626"; }}
+                                >
+                                    {isDeleting ? (
+                                        <>
+                                            <Loader2 size={14} className="animate-spin" />
+                                            Deletando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Trash2 size={14} />
+                                            Deletar
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* ── Edit Modal ── */}
             {editingRecord && (
