@@ -140,12 +140,12 @@ export function BoardingDataCard({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="plataforma">Plataforma</Label>
+            <Label htmlFor="icao">ICAO</Label>
             <Input
-              id="plataforma"
-              placeholder="Ex: P-01"
-              value={formData.plataforma}
-              onChange={(e) => onChange("plataforma", e.target.value)}
+              id="icao"
+              placeholder="Digite o código ICAO"
+              value={formData.icao}
+              onChange={(e) => onChange("icao", e.target.value)}
             />
           </div>
 

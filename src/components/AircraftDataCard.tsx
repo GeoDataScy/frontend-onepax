@@ -72,22 +72,22 @@ export function AircraftDataCard({ formData, onChange, isCatraca2 }: AircraftDat
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="icao">ICAO</Label>
-          <Input
-            id="icao"
-            placeholder="Digite o código ICAO"
-            value={formData.icao}
-            onChange={(e) => onChange("icao", e.target.value)}
-          />
-        </div>
-
-        <div className="space-y-2">
           <Label htmlFor="numeroVoo">Nº do Voo</Label>
           <Input
             id="numeroVoo"
             placeholder=""
             value={formData.numeroVoo}
             onChange={(e) => onChange("numeroVoo", e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="plataforma">Plataforma</Label>
+          <Input
+            id="plataforma"
+            placeholder="Ex: P-01"
+            value={formData.plataforma}
+            onChange={(e) => onChange("plataforma", e.target.value)}
           />
         </div>
       </div>
