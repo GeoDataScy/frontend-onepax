@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/select";
 import { BoardingFormData } from "@/types/boarding";
 import { cn } from "@/lib/utils";
+import { aircraftOperatorMap } from "@/data/aircraftOperatorMap";
 
 interface AircraftDataCardProps {
   formData: BoardingFormData;
@@ -17,6 +18,8 @@ interface AircraftDataCardProps {
 }
 
 export function AircraftDataCard({ formData, onChange, isCatraca2 }: AircraftDataCardProps) {
+  const matchedOperator = aircraftOperatorMap[formData.aeronave] ?? null;
+
   return (
     <div
       className={cn(
@@ -38,6 +41,12 @@ export function AircraftDataCard({ formData, onChange, isCatraca2 }: AircraftDat
             onChange={(e) => {
               const val = e.target.value.toUpperCase().replace(/\s/g, "");
               onChange("aeronave", val);
+              const operator = aircraftOperatorMap[val];
+              if (operator) {
+                onChange("operadorAereo", operator);
+              } else {
+                onChange("operadorAereo", "");
+              }
             }}
             maxLength={5}
           />
@@ -46,17 +55,18 @@ export function AircraftDataCard({ formData, onChange, isCatraca2 }: AircraftDat
         <div className="space-y-2">
           <Label htmlFor="operadorAereo">Operador Aéreo</Label>
           <Select
-            value={formData.operadorAereo}
+            value={matchedOperator ?? formData.operadorAereo}
             onValueChange={(value) => onChange("operadorAereo", value)}
+            disabled={!!matchedOperator}
           >
             <SelectTrigger id="operadorAereo">
               <SelectValue placeholder="Selecione o operador" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Omni Taxi Aéreo">Omni Taxi Aéreo</SelectItem>
-              <SelectItem value="Bristow Taxi Aéreo">Bristow Taxi Aéreo</SelectItem>
-              <SelectItem value="Líder Taxi Aéreo">Líder Taxi Aéreo</SelectItem>
-              <SelectItem value="CHC Brasil Taxi Aéreo">CHC Brasil Taxi Aéreo</SelectItem>
+              <SelectItem value="Omni Táxi Aéreo">Omni Táxi Aéreo</SelectItem>
+              <SelectItem value="Bristow Táxi Aéreo">Bristow Táxi Aéreo</SelectItem>
+              <SelectItem value="Líder Táxi Aéreo">Líder Táxi Aéreo</SelectItem>
+              <SelectItem value="CHC Táxi Aéreo">CHC Táxi Aéreo</SelectItem>
             </SelectContent>
           </Select>
         </div>
