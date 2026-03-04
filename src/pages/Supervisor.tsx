@@ -256,8 +256,8 @@ export default function Supervisor() {
         }
         const exportData = filteredRecords.map((record) => {
             const row: Record<string, any> = {};
-            activeConfig.columns.forEach((col) => {
-                row[col.label] = col.format ? col.format(record[col.key]) : record[col.key];
+            activeConfig.fields.forEach((field) => {
+                row[field.label] = record[field.key] ?? "";
             });
             return row;
         });
