@@ -31,6 +31,19 @@ export const embarqueService = {
         return response.json();
     },
 
+    async create(record: Omit<EmbarqueRecord, 'id'>): Promise<EmbarqueRecord> {
+        const response = await fetch(`${API_URL}/api/embarque/`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(record),
+        });
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.detail || 'Erro ao criar registro de embarque');
+        }
+        return response.json();
+    },
+
     async update(id: number, record: Partial<EmbarqueRecord>): Promise<EmbarqueRecord> {
         const response = await fetch(`${API_URL}/api/embarque/${id}/`, {
             method: 'PUT',

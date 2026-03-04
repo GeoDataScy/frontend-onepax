@@ -17,7 +17,8 @@ import {
     Filter,
     RotateCcw,
     Trash2,
-    AlertTriangle
+    AlertTriangle,
+    Plus
 } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
@@ -209,6 +210,9 @@ export default function Supervisor() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [showCreateForm, setShowCreateForm] = useState(false);
+    const [createForm, setCreateForm] = useState<Record<string, any>>({});
+    const [isCreating, setIsCreating] = useState(false);
     const [filterDateStart, setFilterDateStart] = useState("");
     const [filterDateEnd, setFilterDateEnd] = useState("");
     const [filterOperadora, setFilterOperadora] = useState("");
@@ -340,6 +344,28 @@ export default function Supervisor() {
             return { voo: record.numero_voo, operadora: record.companhia_aerea };
         }
         return { voo: record.numero_voo, operadora: record.empresa_solicitante };
+    };
+
+    const openCreateForm = () => {
+        const empty: Record<string, any> = {};
+        activeConfig.fields.forEach((f) => { empty[f.key] = ""; });
+        setCreateForm(empty);
+        setShowCreateForm(true);
+    };
+
+    const handleCreate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            setIsCreating(true);
+            await activeConfig.service.create(createForm);
+            toast.success("Registro criado com sucesso");
+            setShowCreateForm(false);
+            fetchRecords();
+        } catch (error: any) {
+            toast.error(error.message || "Erro ao criar registro");
+        } finally {
+            setIsCreating(false);
+        }
     };
 
     const updateEditField = (key: string, value: any) => {
@@ -682,6 +708,35 @@ export default function Supervisor() {
                                 </svg>
                                 Exportar
                             </button>
+
+                            {/* Add record button */}
+                            <button
+                                onClick={openCreateForm}
+                                title="Adicionar registro"
+                                style={{
+                                    height: "36px",
+                                    padding: "0 16px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    backgroundColor: colors.text,
+                                    color: colors.white,
+                                    border: "none",
+                                    borderRadius: "6px",
+                                    fontSize: "13px",
+                                    fontWeight: 500,
+                                    fontFamily: "'Inter', sans-serif",
+                                    cursor: "pointer",
+                                    transition: "opacity 0.2s",
+                                    whiteSpace: "nowrap",
+                                    flexShrink: 0,
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+                            >
+                                <Plus size={15} strokeWidth={2.5} />
+                                Adicionar Voo
+                            </button>
                         </div>
                     </div>
 
@@ -791,6 +846,187 @@ export default function Supervisor() {
                     </div>
                 </main>
             </div>
+
+            {/* ── Create Modal ── */}
+            {showCreateForm && (
+                <div
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: "rgba(0,0,0,0.5)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 50,
+                        padding: "20px",
+                    }}
+                    onClick={() => setShowCreateForm(false)}
+                >
+                    <div
+                        style={{
+                            backgroundColor: colors.white,
+                            borderRadius: "8px",
+                            width: "100%",
+                            maxWidth: "600px",
+                            maxHeight: "90vh",
+                            overflowY: "auto",
+                            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div
+                            style={{
+                                padding: "20px 24px",
+                                borderBottom: `1px solid ${colors.border}`,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                position: "sticky",
+                                top: 0,
+                                backgroundColor: colors.white,
+                                zIndex: 10,
+                            }}
+                        >
+                            <h3 style={{ fontSize: "18px", fontWeight: 600, color: colors.text, fontFamily: "'Inter', sans-serif", margin: 0 }}>
+                                Adicionar {activeConfig.label}
+                            </h3>
+                            <button
+                                onClick={() => setShowCreateForm(false)}
+                                style={{ background: "transparent", border: "none", cursor: "pointer", color: colors.textMuted }}
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleCreate} style={{ padding: "24px" }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                                {activeConfig.fields.map((field) => (
+                                    <div key={field.key}>
+                                        <label
+                                            style={{
+                                                display: "block",
+                                                fontSize: "11px",
+                                                fontWeight: 500,
+                                                color: colors.textMuted,
+                                                textTransform: "uppercase",
+                                                marginBottom: "6px",
+                                                fontFamily: "'Inter', sans-serif",
+                                                letterSpacing: "0.06em",
+                                            }}
+                                        >
+                                            {field.label}
+                                        </label>
+
+                                        {field.type === "select" ? (
+                                            <select
+                                                value={createForm[field.key] || ""}
+                                                onChange={(e) => setCreateForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                                                style={{
+                                                    width: "100%",
+                                                    height: "40px",
+                                                    padding: "0 12px",
+                                                    borderRadius: "4px",
+                                                    border: `1px solid ${colors.border}`,
+                                                    backgroundColor: colors.white,
+                                                    fontSize: "13px",
+                                                    color: colors.text,
+                                                    outline: "none",
+                                                    fontFamily: "'Inter', sans-serif",
+                                                }}
+                                            >
+                                                <option value="" disabled>Selecione</option>
+                                                {field.options?.map((opt) => (
+                                                    <option key={opt} value={opt}>{opt}</option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <input
+                                                type={field.type}
+                                                value={createForm[field.key] || ""}
+                                                onChange={(e) => setCreateForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                                                style={{
+                                                    width: "100%",
+                                                    height: "40px",
+                                                    padding: "0 12px",
+                                                    borderRadius: "4px",
+                                                    border: `1px solid ${colors.border}`,
+                                                    backgroundColor: colors.white,
+                                                    fontSize: "13px",
+                                                    color: colors.text,
+                                                    outline: "none",
+                                                    fontFamily: "'Inter', sans-serif",
+                                                }}
+                                            />
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div
+                                style={{
+                                    marginTop: "24px",
+                                    paddingTop: "20px",
+                                    borderTop: `1px solid ${colors.border}`,
+                                    display: "flex",
+                                    justifyContent: "flex-end",
+                                    gap: "12px",
+                                }}
+                            >
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCreateForm(false)}
+                                    style={{
+                                        padding: "8px 16px",
+                                        borderRadius: "4px",
+                                        border: `1px solid ${colors.border}`,
+                                        backgroundColor: "transparent",
+                                        color: colors.textMuted,
+                                        fontSize: "13px",
+                                        cursor: "pointer",
+                                        fontFamily: "'Inter', sans-serif",
+                                    }}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isCreating}
+                                    style={{
+                                        padding: "8px 24px",
+                                        borderRadius: "4px",
+                                        border: "none",
+                                        backgroundColor: colors.text,
+                                        color: colors.white,
+                                        fontSize: "13px",
+                                        fontWeight: 500,
+                                        cursor: isCreating ? "not-allowed" : "pointer",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "8px",
+                                        opacity: isCreating ? 0.7 : 1,
+                                        fontFamily: "'Inter', sans-serif",
+                                    }}
+                                >
+                                    {isCreating ? (
+                                        <>
+                                            <Loader2 size={14} className="animate-spin" />
+                                            Salvando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Save size={14} />
+                                            Salvar Registro
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* ── Delete Confirmation Modal ── */}
             {deleteTarget && (() => {

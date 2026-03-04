@@ -30,6 +30,19 @@ export const desembarqueService = {
         return response.json();
     },
 
+    async create(record: Omit<DesembarqueRecord, 'id'>): Promise<DesembarqueRecord> {
+        const response = await fetch(`${API_URL}/api/desembarque/`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(record),
+        });
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.detail || 'Erro ao criar registro de desembarque');
+        }
+        return response.json();
+    },
+
     async update(id: number, record: Partial<DesembarqueRecord>): Promise<DesembarqueRecord> {
         const response = await fetch(`${API_URL}/api/desembarque/${id}/`, {
             method: 'PUT',
