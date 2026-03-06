@@ -1,6 +1,6 @@
 import { BoardingFormData } from "@/types/boarding";
 
-const API_URL = "https://onepax-onepax.7y6zlt.easypanel.host";
+const API_URL = import.meta.env.VITE_API_URL;
 const ID_CATRACA_2 = "1002";
 
 export const catraca2Service = {
