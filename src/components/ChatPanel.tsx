@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Loader2, MessageSquare, X, Bot } from "lucide-react";
+import { Send, Loader2, MessageSquare, X, Bot, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { chatService, ChatMessage } from "@/services/chatService";
@@ -12,7 +12,16 @@ const QUICK_ACTIONS = [
   "Quantos desembarques houve essa semana?",
 ];
 
-export function ChatPanel() {
+interface ChatPanelProps {
+  dashboardData?: {
+    voos_hoje: number;
+    passageiros_hoje: number;
+    embarques: number;
+    desembarques: number;
+  };
+}
+
+export function ChatPanel({ dashboardData }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -52,6 +61,35 @@ export function ChatPanel() {
     }
   };
 
+  const handleWhatsAppReport = () => {
+    const today = new Date();
+    const dateStr = today.toLocaleDateString("pt-BR", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    const voos = dashboardData?.voos_hoje ?? 0;
+    const embarques = dashboardData?.embarques ?? 0;
+    const desembarques = dashboardData?.desembarques ?? 0;
+    const totalPax = dashboardData?.passageiros_hoje ?? 0;
+
+    const message =
+      `*ONEPAX - Relatório Operacional Diário*\n` +
+      `_${dateStr}_\n\n` +
+      `Segue o resumo das operações do dia:\n\n` +
+      `*Voos realizados:* ${voos}\n` +
+      `*Total de passageiros:* ${totalPax}\n` +
+      `*Embarques:* ${embarques}\n` +
+      `*Desembarques:* ${desembarques}\n\n` +
+      `_Relatório gerado automaticamente pela Central de Análise._`;
+
+    const phone = "5511942054868";
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank");
+  };
+
   if (!isOpen) {
     return (
       <button
@@ -85,12 +123,22 @@ export function ChatPanel() {
             Byone
           </span>
         </div>
-        <button
-          onClick={() => setIsOpen(false)}
-          className="text-white/70 hover:text-white transition-colors"
-        >
-          <X size={16} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleWhatsAppReport}
+            title="Enviar relatório via WhatsApp"
+            className="flex items-center justify-center h-7 w-7 rounded-md transition-colors"
+            style={{ backgroundColor: "#25D366" }}
+          >
+            <Phone size={14} className="text-white" />
+          </button>
+          <button
+            onClick={() => setIsOpen(false)}
+            className="text-white/70 hover:text-white transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
       </div>
 
       {/* Messages */}

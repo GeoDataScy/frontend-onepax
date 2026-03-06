@@ -311,7 +311,14 @@ const CentralAnalise = () => {
         </Tabs>
       </main>
 
-      <ChatPanel />
+      <ChatPanel
+        dashboardData={data ? {
+          voos_hoje: kpis?.voos_hoje ?? 0,
+          passageiros_hoje: kpis?.passageiros_hoje ?? 0,
+          embarques: horarioData.reduce((s, h) => s + h.embarques, 0),
+          desembarques: horarioData.reduce((s, h) => s + h.desembarques, 0),
+        } : undefined}
+      />
 
       <OperadorModal
         open={!!selectedOperador}
