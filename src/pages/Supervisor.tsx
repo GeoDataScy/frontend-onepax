@@ -100,6 +100,7 @@ const MODULE_CONFIG: Record<
             { key: "arrival_date", label: "Data de Chegada", type: "date" },
             { key: "arrival_time", label: "Horário de Chegada", type: "time" },
             { key: "origin", label: "Origem", type: "text" },
+            { key: "icao", label: "ICAO", type: "text" },
             { key: "cliente_final", label: "Cliente Final", type: "text" },
             { key: "passengers_disembarked", label: "Passageiros Desembarcados", type: "number" },
             { key: "observacao", label: "Observação", type: "text" },

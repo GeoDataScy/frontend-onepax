@@ -8,6 +8,7 @@ export interface DesembarqueRecord {
     arrival_date: string;
     arrival_time: string;
     origin: string;
+    icao: string;
     cliente_final: string;
     passengers_disembarked: number;
     observacao: string;
