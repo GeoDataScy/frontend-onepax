@@ -102,6 +102,7 @@ const DashboardPassageirosContent = () => {
     date: formatDate(d.date),
     embarque: d.embarque,
     desembarque: d.desembarque,
+    total: d.embarque + d.desembarque,
   })) ?? [];
 
   const allMeses = data?.tabela_operadoras.length
@@ -212,7 +213,7 @@ const DashboardPassageirosContent = () => {
 
               {/* Stacked Bar Chart */}
               <div className="rounded-md border bg-white p-5 mb-6" style={{ borderColor: "#E0E0E0" }}>
-                <h3 className="text-sm font-semibold mb-4" style={{ color: "#222222" }}>Passageiros por Year, Month, Day e Servico</h3>
+                <h3 className="text-sm font-semibold mb-4" style={{ color: "#222222" }}>Passageiros por Ano, Mes, Dia e Servico</h3>
                 {chartData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={360}>
                     <BarChart data={chartData} barCategoryGap="20%">
@@ -226,6 +227,7 @@ const DashboardPassageirosContent = () => {
                       </Bar>
                       <Bar dataKey="desembarque" name="Desembarque" stackId="a" fill={DESEMBARQUE_COLOR} radius={[4, 4, 0, 0]}>
                         <LabelList dataKey="desembarque" position="center" fill="#FFFFFF" fontSize={10} />
+                        <LabelList dataKey="total" position="top" fill="#222222" fontSize={10} fontWeight="bold" />
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
