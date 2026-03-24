@@ -74,7 +74,7 @@ const CentralAnalise = () => {
                 e.currentTarget.style.boxShadow = "none";
               }}
             >
-              <img src="/byone-avatar.png" alt="Byone" className="w-5 h-5 rounded object-cover" />
+              <img src="/byone-icon.png" alt="Byone" className="w-5 h-5 rounded-full object-cover" />
               Byone
             </button>
           </div>

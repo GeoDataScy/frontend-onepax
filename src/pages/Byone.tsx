@@ -206,10 +206,10 @@ const Byone = () => {
                 >
                   {msg.role === "assistant" && (
                     <div
-                      className="flex-shrink-0 w-7 h-7 rounded-lg overflow-hidden mr-3 mt-0.5"
+                      className="flex-shrink-0 w-7 h-7 rounded-full overflow-hidden mr-3 mt-0.5"
                       style={{ border: "1px solid #27272a" }}
                     >
-                      <img src="/byone-avatar.png" alt="Byone" className="w-full h-full object-cover" />
+                      <img src="/byone-icon.png" alt="Byone" className="w-full h-full object-cover" />
                     </div>
                   )}
                   <div
