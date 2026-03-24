@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import {
-  Calendar, ArrowUp, ArrowDown, BarChart3, Copy, Bell,
-  Filter, Maximize2, MoreHorizontal, ChevronDown, ChevronRight,
+  Calendar, ChevronDown, ChevronRight,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -10,6 +9,7 @@ import {
 import {
   dashboardService,
   type DashboardOperacionalData,
+  type DashboardPassageirosData,
   type FiltrosData,
 } from "@/services/dashboardService";
 
@@ -65,21 +65,6 @@ const CustomStackedTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-const CustomLineTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload?.[0]) return null;
-  return (<div className="bg-black text-white rounded px-2 py-1 text-xs shadow">{label}: {payload[0].value?.toLocaleString("pt-BR")}</div>);
-};
-
-const CustomLineDot = (props: any) => {
-  const { cx, cy, value } = props;
-  return (
-    <g>
-      <circle cx={cx} cy={cy} r={5} fill="#000000" stroke="#FFFFFF" strokeWidth={2} />
-      <rect x={cx - 18} y={cy - 26} width={36} height={18} rx={4} fill="#000000" />
-      <text x={cx} y={cy - 14} textAnchor="middle" fill="#FFFFFF" fontSize={9} fontWeight="bold">{value?.toLocaleString("pt-BR")}</text>
-    </g>
-  );
-};
 
 const renderStackedLabel = (fill: string) => (props: any) => {
   const { x, y, width, height, value } = props;
@@ -91,6 +76,7 @@ const renderStackedLabel = (fill: string) => (props: any) => {
 const DashboardOperacionalContent = () => {
   const [filtros, setFiltros] = useState<FiltrosData | null>(null);
   const [data, setData] = useState<DashboardOperacionalData | null>(null);
+  const [paxData, setPaxData] = useState<DashboardPassageirosData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -115,14 +101,23 @@ const DashboardOperacionalContent = () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await dashboardService.getOperacional({
-        data_inicio: dateFrom,
-        data_fim: dateTo,
-        empresa: selectedEmpresas.length > 0 ? selectedEmpresas : undefined,
-        cliente_final: selectedClientes.length > 0 ? selectedClientes : undefined,
-        icao: selectedIcao.length > 0 ? selectedIcao : undefined,
-      });
-      setData(result);
+      const [opResult, paxResult] = await Promise.all([
+        dashboardService.getOperacional({
+          data_inicio: dateFrom,
+          data_fim: dateTo,
+          empresa: selectedEmpresas.length > 0 ? selectedEmpresas : undefined,
+          cliente_final: selectedClientes.length > 0 ? selectedClientes : undefined,
+          icao: selectedIcao.length > 0 ? selectedIcao : undefined,
+        }),
+        dashboardService.getPassageiros({
+          data_inicio: dateFrom,
+          data_fim: dateTo,
+          operadora: selectedEmpresas.length > 0 ? selectedEmpresas : undefined,
+          cliente_final: selectedClientes.length > 0 ? selectedClientes : undefined,
+        }),
+      ]);
+      setData(opResult);
+      setPaxData(paxResult);
     } catch (err: any) {
       setError(err.message || "Erro ao carregar dados");
     } finally {
@@ -148,10 +143,11 @@ const DashboardOperacionalContent = () => {
     return row;
   }) ?? [];
 
-  const lineData = data?.media_diaria_mes.map((item) => ({
-    mes: mesLabel(item.mes),
-    media: Math.round(item.media),
-  })) ?? [];
+  const dailyLineData = paxData?.diario.map((d) => {
+    const dt = new Date(d.date + "T00:00:00");
+    const label = `${dt.getDate().toString().padStart(2, "0")}/${(dt.getMonth() + 1).toString().padStart(2, "0")}`;
+    return { dia: label, total: d.embarque + d.desembarque };
+  }) ?? [];
 
   // Build table data from tabela_clientes
   const todosClientes = data?.tabela_clientes.length
@@ -261,37 +257,49 @@ const DashboardOperacionalContent = () => {
               )}
             </div>
 
-            {/* Line Chart */}
+            {/* Line Chart - Media Diaria */}
             <div className="bg-white rounded-md border p-5" style={{ borderColor: "#E8E8E8" }}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold" style={{ color: "#222222" }}>Media Diaria de Passageiros</h3>
-                <div className="flex items-center gap-1">
-                  {[ArrowUp, ArrowDown, BarChart3, Copy, Bell, Filter, Maximize2, MoreHorizontal].map((Icon, i) => (
-                    <button key={i} className="p-1 rounded hover:bg-gray-100"><Icon size={14} className="text-muted-foreground" /></button>
-                  ))}
-                </div>
-              </div>
-              {lineData.length > 1 ? (
+              <h3 className="text-sm font-semibold mb-4" style={{ color: "#222222" }}>Media Diaria de Passageiros</h3>
+              {dailyLineData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={lineData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E8E8E8" vertical={false} />
-                    <XAxis dataKey="mes" fontSize={11} tickLine={false} axisLine={false} />
-                    <YAxis fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => v.toLocaleString("pt-BR")} />
-                    <Tooltip content={<CustomLineTooltip />} />
-                    <Line type="monotone" dataKey="media" stroke={LINE_COLOR} strokeWidth={2} dot={<CustomLineDot />} activeDot={false} />
+                  <LineChart data={dailyLineData} margin={{ top: 10, right: 20, bottom: 0, left: 0 }}>
+                    <defs>
+                      <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={LINE_COLOR} stopOpacity={0.15} />
+                        <stop offset="100%" stopColor={LINE_COLOR} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" vertical={false} />
+                    <XAxis
+                      dataKey="dia"
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fill: "#999" }}
+                      interval={Math.max(0, Math.floor(dailyLineData.length / 10) - 1)}
+                    />
+                    <YAxis
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fill: "#999" }}
+                      tickFormatter={(v) => v.toLocaleString("pt-BR")}
+                      width={50}
+                    />
+                    <Tooltip
+                      contentStyle={{ borderRadius: 8, border: "1px solid #E8E8E8", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", fontSize: 12 }}
+                      formatter={(value: number) => [value.toLocaleString("pt-BR"), "Passageiros"]}
+                      labelStyle={{ fontWeight: 600, marginBottom: 4 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="total"
+                      stroke={LINE_COLOR}
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 4, fill: LINE_COLOR, stroke: "#fff", strokeWidth: 2 }}
+                    />
                   </LineChart>
-                </ResponsiveContainer>
-              ) : lineData.length === 1 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={lineData} barCategoryGap="60%">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E8E8E8" vertical={false} />
-                    <XAxis dataKey="mes" fontSize={11} tickLine={false} axisLine={false} />
-                    <YAxis fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => v.toLocaleString("pt-BR")} />
-                    <Tooltip content={<CustomLineTooltip />} />
-                    <Bar dataKey="media" name="Media Diaria" fill={LINE_COLOR} radius={[4, 4, 0, 0]}>
-                      <LabelList dataKey="media" position="top" fontSize={12} fontWeight="bold" formatter={(v: number) => v.toLocaleString("pt-BR")} />
-                    </Bar>
-                  </BarChart>
                 </ResponsiveContainer>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-10">Nenhum dado no periodo selecionado</p>
