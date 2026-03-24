@@ -11,6 +11,7 @@ import {
   type DashboardOperacionalData,
   type DashboardPassageirosData,
   type FiltrosData,
+  expandOriginals,
 } from "@/services/dashboardService";
 
 const CORES_EMPRESAS: Record<string, string> = {};
@@ -105,15 +106,23 @@ const DashboardOperacionalContent = () => {
         dashboardService.getOperacional({
           data_inicio: dateFrom,
           data_fim: dateTo,
-          empresa: selectedEmpresas.length > 0 ? selectedEmpresas : undefined,
-          cliente_final: selectedClientes.length > 0 ? selectedClientes : undefined,
+          empresa: selectedEmpresas.length > 0
+            ? expandOriginals(selectedEmpresas, filtros?._originais_operadoras ?? {})
+            : undefined,
+          cliente_final: selectedClientes.length > 0
+            ? expandOriginals(selectedClientes, filtros?._originais_clientes ?? {})
+            : undefined,
           icao: selectedIcao.length > 0 ? selectedIcao : undefined,
         }),
         dashboardService.getPassageiros({
           data_inicio: dateFrom,
           data_fim: dateTo,
-          operadora: selectedEmpresas.length > 0 ? selectedEmpresas : undefined,
-          cliente_final: selectedClientes.length > 0 ? selectedClientes : undefined,
+          operadora: selectedEmpresas.length > 0
+            ? expandOriginals(selectedEmpresas, filtros?._originais_operadoras ?? {})
+            : undefined,
+          cliente_final: selectedClientes.length > 0
+            ? expandOriginals(selectedClientes, filtros?._originais_clientes ?? {})
+            : undefined,
         }),
       ]);
       setData(opResult);

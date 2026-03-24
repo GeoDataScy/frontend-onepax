@@ -13,6 +13,9 @@ export interface FiltrosData {
   clientes_finais: string[];
   tipos_icao: string[];
   aeronaves: string[];
+  // Mapa reverso: nome normalizado -> nomes originais do banco
+  _originais_operadoras: Record<string, string[]>;
+  _originais_clientes: Record<string, string[]>;
 }
 
 export interface PassageirosKpis {
@@ -126,14 +129,36 @@ function normalizeOperacionalData(data: DashboardOperacionalData): DashboardOper
   };
 }
 
+function buildReverseMap(originals: string[]): { normalized: string[]; reverseMap: Record<string, string[]> } {
+  const map: Record<string, string[]> = {};
+  for (const name of originals) {
+    if (!name) continue;
+    const norm = normalizeName(name);
+    if (!map[norm]) map[norm] = [];
+    if (!map[norm].includes(name)) map[norm].push(name);
+  }
+  return { normalized: Object.keys(map).sort(), reverseMap: map };
+}
+
 function normalizeFiltros(data: FiltrosData): FiltrosData {
-  const unique = (arr: string[]) => [...new Set(arr.map(normalizeName).filter(Boolean))].sort();
+  const ops = buildReverseMap(data.operadoras);
+  const cls = buildReverseMap(data.clientes_finais);
   return {
-    operadoras: unique(data.operadoras),
-    clientes_finais: unique(data.clientes_finais),
+    operadoras: ops.normalized,
+    clientes_finais: cls.normalized,
     tipos_icao: data.tipos_icao.filter(Boolean).sort(),
     aeronaves: data.aeronaves.filter(Boolean).sort(),
+    _originais_operadoras: ops.reverseMap,
+    _originais_clientes: cls.reverseMap,
   };
+}
+
+// Expande nomes normalizados para todos os originais do banco
+export function expandOriginals(
+  selected: string[],
+  reverseMap: Record<string, string[]>
+): string[] {
+  return selected.flatMap((name) => reverseMap[name] || [name]);
 }
 
 function buildQuery(params: Record<string, string | string[] | undefined>): string {

@@ -7,6 +7,7 @@ import {
 } from "recharts";
 import {
   dashboardService,
+  expandOriginals,
   type DashboardPassageirosData,
   type FiltrosData,
 } from "@/services/dashboardService";
@@ -76,8 +77,12 @@ const DashboardPassageirosContent = () => {
       const result = await dashboardService.getPassageiros({
         data_inicio: dateFrom,
         data_fim: dateTo,
-        operadora: selectedOperadoras.length > 0 ? selectedOperadoras : undefined,
-        cliente_final: selectedClientes.length > 0 ? selectedClientes : undefined,
+        operadora: selectedOperadoras.length > 0
+          ? expandOriginals(selectedOperadoras, filtros?._originais_operadoras ?? {})
+          : undefined,
+        cliente_final: selectedClientes.length > 0
+          ? expandOriginals(selectedClientes, filtros?._originais_clientes ?? {})
+          : undefined,
         servico: selectedServicos.length === 1 ? selectedServicos[0].toLowerCase() : undefined,
         aeronave: aeronave !== "Todos" ? [aeronave] : undefined,
       });
