@@ -58,8 +58,8 @@ const DashboardPassageirosContent = () => {
   const today = new Date();
   const twelveMonthsAgo = new Date(today);
   twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1);
-  const [dateFrom] = useState(twelveMonthsAgo.toISOString().slice(0, 10));
-  const [dateTo] = useState(today.toISOString().slice(0, 10));
+  const [dateFrom, setDateFrom] = useState(twelveMonthsAgo.toISOString().slice(0, 10));
+  const [dateTo, setDateTo] = useState(today.toISOString().slice(0, 10));
 
   const toggleFilter = (list: string[], item: string, setter: (v: string[]) => void) => {
     setter(list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
@@ -173,9 +173,9 @@ const DashboardPassageirosContent = () => {
         <div className="flex items-center justify-end gap-3 p-4">
           <div className="flex items-center gap-2 text-sm border rounded px-3 py-1.5" style={{ borderColor: "#D0D0D0" }}>
             <Calendar size={14} className="text-muted-foreground" />
-            <span>{formatDateBR(dateFrom)}</span>
+            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="bg-transparent outline-none text-sm" />
             <span className="text-muted-foreground">-</span>
-            <span>{formatDateBR(dateTo)}</span>
+            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="bg-transparent outline-none text-sm" />
           </div>
           <button className="p-1.5 rounded hover:bg-gray-100"><Filter size={16} className="text-muted-foreground" /></button>
           <button className="p-1.5 rounded hover:bg-gray-100"><Maximize2 size={16} className="text-muted-foreground" /></button>

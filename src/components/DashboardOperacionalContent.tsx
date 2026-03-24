@@ -100,8 +100,8 @@ const DashboardOperacionalContent = () => {
   const [tableExpanded, setTableExpanded] = useState(true);
 
   const today = new Date();
-  const [dateFrom] = useState(`${today.getFullYear()}-01-01`);
-  const [dateTo] = useState(`${today.getFullYear()}-12-31`);
+  const [dateFrom, setDateFrom] = useState(`${today.getFullYear()}-01-01`);
+  const [dateTo, setDateTo] = useState(`${today.getFullYear()}-12-31`);
 
   const toggleItem = (list: string[], item: string, setter: (v: string[]) => void) => {
     setter(list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
@@ -178,12 +178,12 @@ const DashboardOperacionalContent = () => {
           <span className="font-semibold text-muted-foreground">Date</span>
           <div className="flex items-center gap-1 border rounded px-2 py-1" style={{ borderColor: "#CCCCCC" }}>
             <Calendar size={12} className="text-muted-foreground" />
-            <span>{formatDateBR(dateFrom)}</span>
+            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="bg-transparent outline-none text-xs" />
           </div>
           <span className="text-muted-foreground">-</span>
           <div className="flex items-center gap-1 border rounded px-2 py-1" style={{ borderColor: "#CCCCCC" }}>
             <Calendar size={12} className="text-muted-foreground" />
-            <span>{formatDateBR(dateTo)}</span>
+            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="bg-transparent outline-none text-xs" />
           </div>
         </div>
       </div>
