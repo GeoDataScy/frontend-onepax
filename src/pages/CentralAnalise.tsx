@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
-import { BarChart3, Users, Plane, Sparkles } from "lucide-react";
+import { BarChart3, Users, Plane } from "lucide-react";
 import DashboardPassageirosContent from "@/components/DashboardPassageirosContent";
 import DashboardOperacionalContent from "@/components/DashboardOperacionalContent";
 
@@ -74,7 +74,7 @@ const CentralAnalise = () => {
                 e.currentTarget.style.boxShadow = "none";
               }}
             >
-              <Sparkles size={16} style={{ color: "#7c3aed" }} />
+              <img src="/byone-avatar.png" alt="Byone" className="w-5 h-5 rounded object-cover" />
               Byone
             </button>
           </div>

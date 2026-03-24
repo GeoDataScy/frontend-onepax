@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Loader2, Phone, ArrowLeft, Sparkles } from "lucide-react";
+import { Send, Loader2, Phone, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { chatService, ChatMessage } from "@/services/chatService";
@@ -143,14 +143,13 @@ const Byone = () => {
             <div className="flex-1 flex flex-col items-center justify-center max-w-2xl w-full">
               {/* Logo */}
               <div
-                className="relative mb-6 flex items-center justify-center w-20 h-20 rounded-2xl"
+                className="relative mb-6 w-28 h-28 rounded-2xl overflow-hidden"
                 style={{
-                  background: "linear-gradient(135deg, #18181b 0%, #27272a 100%)",
                   border: "1px solid #27272a",
-                  boxShadow: "0 0 40px rgba(124, 58, 237, 0.08)",
+                  boxShadow: "0 0 50px rgba(124, 58, 237, 0.12)",
                 }}
               >
-                <Sparkles size={32} style={{ color: "#7c3aed" }} />
+                <img src="/byone-avatar.png" alt="Byone" className="w-full h-full object-cover" />
               </div>
 
               <h1
@@ -207,10 +206,10 @@ const Byone = () => {
                 >
                   {msg.role === "assistant" && (
                     <div
-                      className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center mr-3 mt-0.5"
-                      style={{ backgroundColor: "#18181b", border: "1px solid #27272a" }}
+                      className="flex-shrink-0 w-7 h-7 rounded-lg overflow-hidden mr-3 mt-0.5"
+                      style={{ border: "1px solid #27272a" }}
                     >
-                      <Sparkles size={14} style={{ color: "#7c3aed" }} />
+                      <img src="/byone-avatar.png" alt="Byone" className="w-full h-full object-cover" />
                     </div>
                   )}
                   <div
