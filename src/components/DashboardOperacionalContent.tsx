@@ -271,7 +271,7 @@ const DashboardOperacionalContent = () => {
                   ))}
                 </div>
               </div>
-              {lineData.length > 0 ? (
+              {lineData.length > 1 ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={lineData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#E8E8E8" vertical={false} />
@@ -280,6 +280,18 @@ const DashboardOperacionalContent = () => {
                     <Tooltip content={<CustomLineTooltip />} />
                     <Line type="monotone" dataKey="media" stroke={LINE_COLOR} strokeWidth={2} dot={<CustomLineDot />} activeDot={false} />
                   </LineChart>
+                </ResponsiveContainer>
+              ) : lineData.length === 1 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={lineData} barCategoryGap="60%">
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E8E8E8" vertical={false} />
+                    <XAxis dataKey="mes" fontSize={11} tickLine={false} axisLine={false} />
+                    <YAxis fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => v.toLocaleString("pt-BR")} />
+                    <Tooltip content={<CustomLineTooltip />} />
+                    <Bar dataKey="media" name="Media Diaria" fill={LINE_COLOR} radius={[4, 4, 0, 0]}>
+                      <LabelList dataKey="media" position="top" fontSize={12} fontWeight="bold" formatter={(v: number) => v.toLocaleString("pt-BR")} />
+                    </Bar>
+                  </BarChart>
                 </ResponsiveContainer>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-10">Nenhum dado no periodo selecionado</p>
