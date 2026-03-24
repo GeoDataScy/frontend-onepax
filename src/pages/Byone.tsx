@@ -143,13 +143,12 @@ const Byone = () => {
             <div className="flex-1 flex flex-col items-center justify-center max-w-2xl w-full">
               {/* Logo */}
               <div
-                className="relative mb-6 w-28 h-28 rounded-2xl overflow-hidden"
+                className="relative mb-6 w-24 h-24 rounded-2xl overflow-hidden"
                 style={{
-                  border: "1px solid #27272a",
-                  boxShadow: "0 0 50px rgba(124, 58, 237, 0.12)",
+                  boxShadow: "0 0 60px rgba(56, 189, 248, 0.15)",
                 }}
               >
-                <img src="/byone-avatar.png" alt="Byone" className="w-full h-full object-cover" />
+                <img src="/byone-logo.png" alt="Byone" className="w-full h-full object-cover" />
               </div>
 
               <h1
