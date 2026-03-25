@@ -21,6 +21,7 @@ import {
     Plus,
     ChevronLeft,
     ChevronRight,
+    Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
@@ -220,6 +221,7 @@ export default function Supervisor() {
     const [filterDateEnd, setFilterDateEnd] = useState("");
     const [filterOperadora, setFilterOperadora] = useState("");
     const [filterCliente, setFilterCliente] = useState("");
+    const [filterFlightNumber, setFilterFlightNumber] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const ROWS_PER_PAGE = 20;
 
@@ -231,13 +233,14 @@ export default function Supervisor() {
         setFilterDateEnd("");
         setFilterOperadora("");
         setFilterCliente("");
+        setFilterFlightNumber("");
         setCurrentPage(1);
     }, [activeModule]);
 
     /* Reset page when filters change */
     useEffect(() => {
         setCurrentPage(1);
-    }, [filterDateStart, filterDateEnd, filterOperadora, filterCliente]);
+    }, [filterDateStart, filterDateEnd, filterOperadora, filterCliente, filterFlightNumber]);
 
     /* Filter helpers */
     const getDateKey = (module: ModuleType) => {
@@ -261,13 +264,17 @@ export default function Supervisor() {
         if (filterDateEnd && recordDate > filterDateEnd) return false;
         if (filterOperadora && record[operadoraKey] !== filterOperadora) return false;
         if (filterCliente && record.cliente_final !== filterCliente) return false;
+        if (filterFlightNumber) {
+            const flightNum = (record.flight_number || record.numero_voo || "").toString().toLowerCase();
+            if (!flightNum.includes(filterFlightNumber.toLowerCase())) return false;
+        }
 
         return true;
     });
 
     const uniqueOperadoras = [...new Set(records.map((r) => r[getOperadoraKey(activeModule)]).filter(Boolean))].sort();
     const uniqueClientes = [...new Set(records.map((r) => r.cliente_final).filter(Boolean))].sort();
-    const hasActiveFilters = filterDateStart || filterDateEnd || filterOperadora || filterCliente;
+    const hasActiveFilters = filterDateStart || filterDateEnd || filterOperadora || filterCliente || filterFlightNumber;
 
     /* Pagination */
     const totalPages = Math.max(1, Math.ceil(filteredRecords.length / ROWS_PER_PAGE));
@@ -528,6 +535,43 @@ export default function Supervisor() {
 
                             {/* Filter fields row */}
                             <div style={{ display: "flex", flex: 1, alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                                {/* Search by flight number */}
+                                {(activeModule === "embarque" || activeModule === "desembarque") && (
+                                    <div style={{ position: "relative", flex: "1 1 160px", minWidth: "140px", maxWidth: "200px" }}>
+                                        <Search
+                                            size={14}
+                                            style={{
+                                                position: "absolute",
+                                                left: "10px",
+                                                top: "50%",
+                                                transform: "translateY(-50%)",
+                                                color: colors.textMuted,
+                                                pointerEvents: "none",
+                                            }}
+                                        />
+                                        <input
+                                            type="text"
+                                            value={filterFlightNumber}
+                                            onChange={(e) => setFilterFlightNumber(e.target.value)}
+                                            placeholder="N. do voo"
+                                            style={{
+                                                height: "36px",
+                                                width: "100%",
+                                                padding: "0 10px 0 32px",
+                                                border: `1px solid ${colors.border}`,
+                                                borderRadius: "6px",
+                                                fontSize: "13px",
+                                                color: colors.text,
+                                                backgroundColor: colors.bg,
+                                                fontFamily: "'Inter', sans-serif",
+                                                outline: "none",
+                                                transition: "border-color 0.2s",
+                                            }}
+                                            onFocus={(e) => (e.target.style.borderColor = colors.accent)}
+                                            onBlur={(e) => (e.target.style.borderColor = colors.border)}
+                                        />
+                                    </div>
+                                )}
                                 <input
                                     type="date"
                                     value={filterDateStart}
@@ -653,6 +697,7 @@ export default function Supervisor() {
                                             setFilterDateEnd("");
                                             setFilterOperadora("");
                                             setFilterCliente("");
+                                            setFilterFlightNumber("");
                                         }}
                                         title="Limpar filtros"
                                         style={{
