@@ -536,7 +536,6 @@ export default function Supervisor() {
                             {/* Filter fields row */}
                             <div style={{ display: "flex", flex: 1, alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
                                 {/* Search by flight number */}
-                                {(activeModule === "embarque" || activeModule === "desembarque") && (
                                     <div style={{ position: "relative", flex: "1 1 160px", minWidth: "140px", maxWidth: "200px" }}>
                                         <Search
                                             size={14}
@@ -571,7 +570,6 @@ export default function Supervisor() {
                                             onBlur={(e) => (e.target.style.borderColor = colors.border)}
                                         />
                                     </div>
-                                )}
                                 <input
                                     type="date"
                                     value={filterDateStart}
