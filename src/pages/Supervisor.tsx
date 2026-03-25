@@ -18,7 +18,9 @@ import {
     RotateCcw,
     Trash2,
     AlertTriangle,
-    Plus
+    Plus,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
@@ -218,6 +220,8 @@ export default function Supervisor() {
     const [filterDateEnd, setFilterDateEnd] = useState("");
     const [filterOperadora, setFilterOperadora] = useState("");
     const [filterCliente, setFilterCliente] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const ROWS_PER_PAGE = 20;
 
     const activeConfig = MODULE_CONFIG[activeModule];
 
@@ -227,7 +231,13 @@ export default function Supervisor() {
         setFilterDateEnd("");
         setFilterOperadora("");
         setFilterCliente("");
+        setCurrentPage(1);
     }, [activeModule]);
+
+    /* Reset page when filters change */
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filterDateStart, filterDateEnd, filterOperadora, filterCliente]);
 
     /* Filter helpers */
     const getDateKey = (module: ModuleType) => {
@@ -258,6 +268,13 @@ export default function Supervisor() {
     const uniqueOperadoras = [...new Set(records.map((r) => r[getOperadoraKey(activeModule)]).filter(Boolean))].sort();
     const uniqueClientes = [...new Set(records.map((r) => r.cliente_final).filter(Boolean))].sort();
     const hasActiveFilters = filterDateStart || filterDateEnd || filterOperadora || filterCliente;
+
+    /* Pagination */
+    const totalPages = Math.max(1, Math.ceil(filteredRecords.length / ROWS_PER_PAGE));
+    const paginatedRecords = filteredRecords.slice(
+        (currentPage - 1) * ROWS_PER_PAGE,
+        currentPage * ROWS_PER_PAGE
+    );
 
     /* Export to Excel */
     const handleExportExcel = () => {
@@ -787,11 +804,11 @@ export default function Supervisor() {
                                             </td>
                                         </tr>
                                     ) : (
-                                        filteredRecords.map((record, idx) => (
+                                        paginatedRecords.map((record, idx) => (
                                             <tr
                                                 key={record.id || idx}
                                                 style={{
-                                                    borderBottom: idx < filteredRecords.length - 1 ? `1px solid ${colors.border}` : "none",
+                                                    borderBottom: idx < paginatedRecords.length - 1 ? `1px solid ${colors.border}` : "none",
                                                     transition: "background-color 0.15s",
                                                 }}
                                                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.bg)}
@@ -844,6 +861,96 @@ export default function Supervisor() {
                                 </tbody>
                             </table>
                         </div>
+
+                        {/* Pagination */}
+                        {filteredRecords.length > ROWS_PER_PAGE && (
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    padding: "12px 20px",
+                                    borderTop: `1px solid ${colors.border}`,
+                                    fontSize: "13px",
+                                    color: colors.textMuted,
+                                }}
+                            >
+                                <span>
+                                    {((currentPage - 1) * ROWS_PER_PAGE) + 1}–{Math.min(currentPage * ROWS_PER_PAGE, filteredRecords.length)} de {filteredRecords.length} registros
+                                </span>
+                                <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    <button
+                                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            width: "32px",
+                                            height: "32px",
+                                            borderRadius: "6px",
+                                            border: `1px solid ${colors.border}`,
+                                            background: "transparent",
+                                            color: currentPage === 1 ? colors.border : colors.text,
+                                            cursor: currentPage === 1 ? "default" : "pointer",
+                                        }}
+                                    >
+                                        <ChevronLeft size={16} />
+                                    </button>
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                        .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
+                                        .reduce<(number | string)[]>((acc, p, i, arr) => {
+                                            if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push("...");
+                                            acc.push(p);
+                                            return acc;
+                                        }, [])
+                                        .map((p, i) =>
+                                            typeof p === "string" ? (
+                                                <span key={`dots-${i}`} style={{ padding: "0 4px", color: colors.textMuted }}>...</span>
+                                            ) : (
+                                                <button
+                                                    key={p}
+                                                    onClick={() => setCurrentPage(p)}
+                                                    style={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        minWidth: "32px",
+                                                        height: "32px",
+                                                        borderRadius: "6px",
+                                                        border: `1px solid ${p === currentPage ? colors.accent : colors.border}`,
+                                                        background: p === currentPage ? colors.accent : "transparent",
+                                                        color: p === currentPage ? "#ffffff" : colors.text,
+                                                        cursor: "pointer",
+                                                        fontSize: "13px",
+                                                        fontWeight: p === currentPage ? 600 : 400,
+                                                    }}
+                                                >
+                                                    {p}
+                                                </button>
+                                            )
+                                        )}
+                                    <button
+                                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages}
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            width: "32px",
+                                            height: "32px",
+                                            borderRadius: "6px",
+                                            border: `1px solid ${colors.border}`,
+                                            background: "transparent",
+                                            color: currentPage === totalPages ? colors.border : colors.text,
+                                            cursor: currentPage === totalPages ? "default" : "pointer",
+                                        }}
+                                    >
+                                        <ChevronRight size={16} />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </main>
             </div>
