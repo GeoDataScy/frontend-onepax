@@ -57,9 +57,8 @@ const DashboardPassageirosContent = () => {
   const [selectedServicos, setSelectedServicos] = useState<string[]>([]);
 
   const today = new Date();
-  const twelveMonthsAgo = new Date(today);
-  twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1);
-  const [dateFrom, setDateFrom] = useState(twelveMonthsAgo.toISOString().slice(0, 10));
+  const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+  const [dateFrom, setDateFrom] = useState(firstDayOfYear.toISOString().slice(0, 10));
   const [dateTo, setDateTo] = useState(today.toISOString().slice(0, 10));
 
   const toggleFilter = (list: string[], item: string, setter: (v: string[]) => void) => {
@@ -98,12 +97,14 @@ const DashboardPassageirosContent = () => {
     fetchData();
   }, [fetchData]);
 
-  const chartData = data?.diario.map((d) => ({
-    date: formatDate(d.date),
-    embarque: d.embarque,
-    desembarque: d.desembarque,
-    total: d.embarque + d.desembarque,
-  })) ?? [];
+  const chartData = data?.diario
+    .filter((d) => d.date >= dateFrom && d.date <= dateTo)
+    .map((d) => ({
+      date: formatDate(d.date),
+      embarque: d.embarque,
+      desembarque: d.desembarque,
+      total: d.embarque + d.desembarque,
+    })) ?? [];
 
   const allMeses = data?.tabela_operadoras.length
     ? Object.keys(data.tabela_operadoras[0].meses).sort()

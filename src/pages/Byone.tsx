@@ -51,6 +51,15 @@ const Byone = () => {
     }
   };
 
+  const [showWhatsAppMenu, setShowWhatsAppMenu] = useState(false);
+  const [whatsAppMessage, setWhatsAppMessage] = useState("");
+
+  const whatsAppContacts = [
+    { name: "Samuel", phone: "5532998412097" },
+    { name: "Tavares", phone: "5522999999499" },
+    { name: "Geovani", phone: "5511942054868" },
+  ];
+
   const handleWhatsAppReport = async () => {
     try {
       const today = new Date();
@@ -72,21 +81,24 @@ const Byone = () => {
       const totalEmb = data.diario.reduce((s, d) => s + d.embarque, 0);
       const totalDesemb = data.diario.reduce((s, d) => s + d.desembarque, 0);
 
-      const message =
+      setWhatsAppMessage(
         `*ONEPAX - Relatorio Operacional Diario*\n` +
         `_${dateStr}_\n\n` +
         `Segue o resumo das operacoes do dia:\n\n` +
         `*Total de passageiros:* ${totalPax}\n` +
         `*Embarques:* ${totalEmb} (${embarques} voos)\n` +
         `*Desembarques:* ${totalDesemb} (${desembarques} voos)\n\n` +
-        `_Relatorio gerado automaticamente pelo Byone._`;
-
-      const phone = "5511942054868";
-      const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-      window.open(url, "_blank");
+        `_Relatorio gerado automaticamente pelo Byone._`
+      );
+      setShowWhatsAppMenu(true);
     } catch {
       toast.error("Erro ao gerar relatorio. Verifique sua conexao.");
     }
+  };
+
+  const handleSendToContact = (phone: string) => {
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(whatsAppMessage)}`;
+    window.open(url, "_blank");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -122,18 +134,44 @@ const Byone = () => {
             Central de Analises
           </button>
 
-          <button
-            onClick={handleWhatsAppReport}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-[1.02]"
-            style={{
-              background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
-              color: "#ffffff",
-              boxShadow: "0 0 20px rgba(37, 211, 102, 0.15)",
-            }}
-          >
-            <Phone size={14} />
-            Enviar Relatorio via WhatsApp
-          </button>
+          <div className="relative">
+            <button
+              onClick={handleWhatsAppReport}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-[1.02]"
+              style={{
+                background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+                color: "#ffffff",
+                boxShadow: "0 0 20px rgba(37, 211, 102, 0.15)",
+              }}
+            >
+              <Phone size={14} />
+              Enviar Relatorio via WhatsApp
+            </button>
+
+            {showWhatsAppMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowWhatsAppMenu(false)} />
+                <div
+                  className="absolute right-0 top-full mt-2 z-50 rounded-lg border shadow-xl overflow-hidden"
+                  style={{ backgroundColor: "#1a1a1a", borderColor: "#2a2a2a", minWidth: 220 }}
+                >
+                  <div className="px-3 py-2 text-xs font-medium" style={{ color: "#71717a", borderBottom: "1px solid #2a2a2a" }}>
+                    Enviar para:
+                  </div>
+                  {whatsAppContacts.map((contact) => (
+                    <button
+                      key={contact.phone}
+                      onClick={() => handleSendToContact(contact.phone)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-white transition-colors hover:bg-white/10"
+                    >
+                      <Phone size={14} style={{ color: "#25D366" }} />
+                      {contact.name}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Chat area */}

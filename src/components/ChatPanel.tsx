@@ -61,6 +61,15 @@ export function ChatPanel({ dashboardData }: ChatPanelProps) {
     }
   };
 
+  const [showWhatsAppMenu, setShowWhatsAppMenu] = useState(false);
+  const [whatsAppMessage, setWhatsAppMessage] = useState("");
+
+  const whatsAppContacts = [
+    { name: "Samuel", phone: "5532998412097" },
+    { name: "Tavares", phone: "5522999999499" },
+    { name: "Geovani", phone: "5511942054868" },
+  ];
+
   const handleWhatsAppReport = () => {
     const today = new Date();
     const dateStr = today.toLocaleDateString("pt-BR", {
@@ -75,7 +84,7 @@ export function ChatPanel({ dashboardData }: ChatPanelProps) {
     const desembarques = dashboardData?.desembarques ?? 0;
     const totalPax = dashboardData?.passageiros_hoje ?? 0;
 
-    const message =
+    setWhatsAppMessage(
       `*ONEPAX - Relatório Operacional Diário*\n` +
       `_${dateStr}_\n\n` +
       `Segue o resumo das operações do dia:\n\n` +
@@ -83,10 +92,13 @@ export function ChatPanel({ dashboardData }: ChatPanelProps) {
       `*Total de passageiros:* ${totalPax}\n` +
       `*Embarques:* ${embarques}\n` +
       `*Desembarques:* ${desembarques}\n\n` +
-      `_Relatório gerado automaticamente pela Central de Análise._`;
+      `_Relatório gerado automaticamente pela Central de Análise._`
+    );
+    setShowWhatsAppMenu(true);
+  };
 
-    const phone = "5511942054868";
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  const handleSendToContact = (phone: string) => {
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(whatsAppMessage)}`;
     window.open(url, "_blank");
   };
 
@@ -124,14 +136,40 @@ export function ChatPanel({ dashboardData }: ChatPanelProps) {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleWhatsAppReport}
-            title="Enviar relatório via WhatsApp"
-            className="flex items-center justify-center h-7 w-7 rounded-md transition-colors"
-            style={{ backgroundColor: "#25D366" }}
-          >
-            <Phone size={14} className="text-white" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={handleWhatsAppReport}
+              title="Enviar relatório via WhatsApp"
+              className="flex items-center justify-center h-7 w-7 rounded-md transition-colors"
+              style={{ backgroundColor: "#25D366" }}
+            >
+              <Phone size={14} className="text-white" />
+            </button>
+
+            {showWhatsAppMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowWhatsAppMenu(false)} />
+                <div
+                  className="absolute right-0 top-full mt-2 z-50 rounded-lg border shadow-xl overflow-hidden"
+                  style={{ backgroundColor: "#1a1a1a", borderColor: "#2a2a2a", minWidth: 200 }}
+                >
+                  <div className="px-3 py-2 text-xs font-medium" style={{ color: "#71717a", borderBottom: "1px solid #2a2a2a" }}>
+                    Enviar para:
+                  </div>
+                  {whatsAppContacts.map((contact) => (
+                    <button
+                      key={contact.phone}
+                      onClick={() => handleSendToContact(contact.phone)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-white transition-colors hover:bg-white/10"
+                    >
+                      <Phone size={14} style={{ color: "#25D366" }} />
+                      {contact.name}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
           <button
             onClick={() => setIsOpen(false)}
             className="text-white/70 hover:text-white transition-colors"
