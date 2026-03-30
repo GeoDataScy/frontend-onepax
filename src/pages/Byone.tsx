@@ -70,24 +70,45 @@ const Byone = () => {
         day: "numeric",
       });
       const todayISO = today.toISOString().slice(0, 10);
-      const data = await dashboardService.getPassageiros({
-        data_inicio: todayISO,
-        data_fim: todayISO,
-      });
 
-      const totalPax = data.kpis.total_passageiros;
-      const embarques = data.kpis.total_decolagens;
-      const desembarques = data.kpis.total_pousos;
-      const totalEmb = data.diario.reduce((s, d) => s + d.embarque, 0);
-      const totalDesemb = data.diario.reduce((s, d) => s + d.desembarque, 0);
+      const [passageiros, operacional] = await Promise.all([
+        dashboardService.getPassageiros({ data_inicio: todayISO, data_fim: todayISO }),
+        dashboardService.getOperacional({ data_inicio: todayISO, data_fim: todayISO }),
+      ]);
+
+      const totalPax = passageiros.kpis.total_passageiros;
+      const embarques = passageiros.kpis.total_decolagens;
+      const desembarques = passageiros.kpis.total_pousos;
+      const totalEmb = passageiros.diario.reduce((s, d) => s + d.embarque, 0);
+      const totalDesemb = passageiros.diario.reduce((s, d) => s + d.desembarque, 0);
+
+      const operadorasLines = passageiros.tabela_operadoras
+        .sort((a, b) => b.total_geral - a.total_geral)
+        .map((op) => `  • ${op.operadora}: ${op.total_geral.toLocaleString("pt-BR")} pax`)
+        .join("\n");
+
+      const clientesMap: Record<string, number> = {};
+      for (const item of operacional.tabela_clientes) {
+        for (const [cliente, valor] of Object.entries(item.clientes)) {
+          clientesMap[cliente] = (clientesMap[cliente] || 0) + valor;
+        }
+      }
+      const clientesLines = Object.entries(clientesMap)
+        .sort(([, a], [, b]) => b - a)
+        .map(([nome, valor]) => `  • ${nome}: ${valor.toLocaleString("pt-BR")} pax`)
+        .join("\n");
 
       setWhatsAppMessage(
         `*ONEPAX - Relatorio Operacional Diario*\n` +
         `_${dateStr}_\n\n` +
-        `Segue o resumo das operacoes do dia:\n\n` +
-        `*Total de passageiros:* ${totalPax}\n` +
-        `*Embarques:* ${totalEmb} (${embarques} voos)\n` +
-        `*Desembarques:* ${totalDesemb} (${desembarques} voos)\n\n` +
+        `*Resumo Geral*\n` +
+        `Total de passageiros: ${totalPax.toLocaleString("pt-BR")}\n` +
+        `Embarques: ${totalEmb.toLocaleString("pt-BR")} (${embarques} voos)\n` +
+        `Desembarques: ${totalDesemb.toLocaleString("pt-BR")} (${desembarques} voos)\n\n` +
+        `*Por Companhia Aerea*\n` +
+        `${operadorasLines}\n\n` +
+        `*Por Cliente Final*\n` +
+        `${clientesLines}\n\n` +
         `_Relatorio gerado automaticamente pelo Byone._`
       );
       setShowWhatsAppMenu(true);

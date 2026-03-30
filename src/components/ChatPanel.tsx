@@ -3,6 +3,7 @@ import { Send, Loader2, MessageSquare, X, Bot, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { chatService, ChatMessage } from "@/services/chatService";
+import { dashboardService } from "@/services/dashboardService";
 import { toast } from "sonner";
 
 const QUICK_ACTIONS = [
@@ -70,31 +71,61 @@ export function ChatPanel({ dashboardData }: ChatPanelProps) {
     { name: "Geovani", phone: "5511942054868" },
   ];
 
-  const handleWhatsAppReport = () => {
-    const today = new Date();
-    const dateStr = today.toLocaleDateString("pt-BR", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+  const handleWhatsAppReport = async () => {
+    try {
+      const today = new Date();
+      const dateStr = today.toLocaleDateString("pt-BR", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      const todayISO = today.toISOString().slice(0, 10);
 
-    const voos = dashboardData?.voos_hoje ?? 0;
-    const embarques = dashboardData?.embarques ?? 0;
-    const desembarques = dashboardData?.desembarques ?? 0;
-    const totalPax = dashboardData?.passageiros_hoje ?? 0;
+      const [passageiros, operacional] = await Promise.all([
+        dashboardService.getPassageiros({ data_inicio: todayISO, data_fim: todayISO }),
+        dashboardService.getOperacional({ data_inicio: todayISO, data_fim: todayISO }),
+      ]);
 
-    setWhatsAppMessage(
-      `*ONEPAX - Relatório Operacional Diário*\n` +
-      `_${dateStr}_\n\n` +
-      `Segue o resumo das operações do dia:\n\n` +
-      `*Voos realizados:* ${voos}\n` +
-      `*Total de passageiros:* ${totalPax}\n` +
-      `*Embarques:* ${embarques}\n` +
-      `*Desembarques:* ${desembarques}\n\n` +
-      `_Relatório gerado automaticamente pela Central de Análise._`
-    );
-    setShowWhatsAppMenu(true);
+      const totalPax = passageiros.kpis.total_passageiros;
+      const embarques = passageiros.kpis.total_decolagens;
+      const desembarques = passageiros.kpis.total_pousos;
+      const totalEmb = passageiros.diario.reduce((s, d) => s + d.embarque, 0);
+      const totalDesemb = passageiros.diario.reduce((s, d) => s + d.desembarque, 0);
+
+      const operadorasLines = passageiros.tabela_operadoras
+        .sort((a, b) => b.total_geral - a.total_geral)
+        .map((op) => `  • ${op.operadora}: ${op.total_geral.toLocaleString("pt-BR")} pax`)
+        .join("\n");
+
+      const clientesMap: Record<string, number> = {};
+      for (const item of operacional.tabela_clientes) {
+        for (const [cliente, valor] of Object.entries(item.clientes)) {
+          clientesMap[cliente] = (clientesMap[cliente] || 0) + valor;
+        }
+      }
+      const clientesLines = Object.entries(clientesMap)
+        .sort(([, a], [, b]) => b - a)
+        .map(([nome, valor]) => `  • ${nome}: ${valor.toLocaleString("pt-BR")} pax`)
+        .join("\n");
+
+      setWhatsAppMessage(
+        `*ONEPAX - Relatório Operacional Diário*\n` +
+        `_${dateStr}_\n\n` +
+        `*Resumo Geral*\n` +
+        `Total de passageiros: ${totalPax.toLocaleString("pt-BR")}\n` +
+        `Embarques: ${totalEmb.toLocaleString("pt-BR")} (${embarques} voos)\n` +
+        `Desembarques: ${totalDesemb.toLocaleString("pt-BR")} (${desembarques} voos)\n\n` +
+        `*Por Companhia Aérea*\n` +
+        `${operadorasLines}\n\n` +
+        `*Por Cliente Final*\n` +
+        `${clientesLines}\n\n` +
+        `_Relatório gerado automaticamente pela Central de Análise._`
+      );
+      setShowWhatsAppMenu(true);
+    } catch {
+      toast.error("Erro ao gerar relatório. Verifique sua conexão.");
+    }
   };
 
   const handleSendToContact = (phone: string) => {
