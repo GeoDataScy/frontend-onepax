@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import {
-  Calendar, ChevronDown, ChevronRight,
+  Calendar, ChevronDown, ChevronRight, Building2, Users, BarChart3,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -201,6 +201,44 @@ const DashboardOperacionalContent = () => {
       )}
 
       {!loading && !error && data && (
+        <>
+        {/* KPI Cards */}
+        <div className="grid grid-cols-3 gap-4 px-6 py-4">
+          {[
+            {
+              label: "Total Passageiros",
+              value: paxData ? paxData.kpis.total_passageiros.toLocaleString("pt-BR") : "—",
+              icon: Users,
+              color: "#8B0000",
+              bg: "#FDF2F2",
+            },
+            {
+              label: "Empresas Ativas",
+              value: todasEmpresas.length.toString(),
+              icon: Building2,
+              color: "#1D4ED8",
+              bg: "#EFF6FF",
+            },
+            {
+              label: "Clientes Ativos",
+              value: todosClientes.length.toString(),
+              icon: BarChart3,
+              color: "#15803D",
+              bg: "#F0FDF4",
+            },
+          ].map((kpi) => (
+            <div key={kpi.label} className="rounded-lg border bg-white p-5 flex items-start gap-4" style={{ borderColor: "#E0E0E0" }}>
+              <div className="rounded-lg p-2.5 flex-shrink-0" style={{ backgroundColor: kpi.bg }}>
+                <kpi.icon size={20} style={{ color: kpi.color }} />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-0.5">{kpi.label}</p>
+                <p className="text-2xl font-bold tracking-tight" style={{ color: "#222222" }}>{kpi.value}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
         <div className="flex flex-1 overflow-hidden">
           {/* Left Table */}
           <div className="w-[260px] flex-shrink-0 border-r overflow-y-auto" style={{ borderColor: "#E8E8E8" }}>
@@ -316,6 +354,7 @@ const DashboardOperacionalContent = () => {
             </div>
           </div>
         </div>
+        </>
       )}
     </div>
   );

@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { Calendar, Filter, Maximize2, MoreHorizontal } from "lucide-react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Calendar, Users, PlaneTakeoff, PlaneLanding } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -15,16 +15,24 @@ import {
 const EMBARQUE_COLOR = "#8B0000";
 const DESEMBARQUE_COLOR = "#555555";
 
+type Granularidade = "dia" | "semana" | "mes";
+
 const CustomBarTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload) return null;
   const embarque = payload.find((p: any) => p.dataKey === "embarque")?.value ?? 0;
   const desembarque = payload.find((p: any) => p.dataKey === "desembarque")?.value ?? 0;
   return (
-    <div className="bg-white border rounded p-2 shadow text-xs">
-      <p className="font-semibold mb-1">{label}</p>
-      <p style={{ color: EMBARQUE_COLOR }}>Embarque: {embarque.toLocaleString("pt-BR")}</p>
-      <p style={{ color: DESEMBARQUE_COLOR }}>Desembarque: {desembarque.toLocaleString("pt-BR")}</p>
-      <p className="font-semibold mt-1">Total: {(embarque + desembarque).toLocaleString("pt-BR")}</p>
+    <div className="bg-white border rounded-lg p-3 shadow-lg text-xs" style={{ border: "1px solid #E0E0E0" }}>
+      <p className="font-semibold mb-1.5" style={{ color: "#222" }}>{label}</p>
+      <div className="flex items-center gap-1.5">
+        <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: EMBARQUE_COLOR }} />
+        <span style={{ color: EMBARQUE_COLOR }}>Embarque: {embarque.toLocaleString("pt-BR")}</span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: DESEMBARQUE_COLOR }} />
+        <span style={{ color: DESEMBARQUE_COLOR }}>Desembarque: {desembarque.toLocaleString("pt-BR")}</span>
+      </div>
+      <p className="font-semibold mt-1.5 pt-1.5" style={{ borderTop: "1px solid #eee", color: "#222" }}>Total: {(embarque + desembarque).toLocaleString("pt-BR")}</p>
     </div>
   );
 };
@@ -45,6 +53,77 @@ function mesLabel(mesKey: string): string {
   return nomes[parseInt(m, 10) - 1] || mesKey;
 }
 
+function getWeekKey(dateStr: string): string {
+  // Retorna a segunda-feira da semana como chave (YYYY-MM-DD)
+  const d = new Date(dateStr + "T00:00:00");
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // segunda-feira
+  const monday = new Date(d);
+  monday.setDate(diff);
+  return monday.toISOString().slice(0, 10);
+}
+
+function formatWeekRange(mondayStr: string): string {
+  const mon = new Date(mondayStr + "T00:00:00");
+  const sun = new Date(mon);
+  sun.setDate(mon.getDate() + 6);
+  const fmt = (dt: Date) => `${dt.getDate().toString().padStart(2, "0")}/${(dt.getMonth() + 1).toString().padStart(2, "0")}`;
+  return `${fmt(mon)} - ${fmt(sun)}`;
+}
+
+function getMonthKey(dateStr: string): string {
+  return dateStr.slice(0, 7);
+}
+
+function autoGranularidade(from: string, to: string): Granularidade {
+  const diffMs = new Date(to + "T00:00:00").getTime() - new Date(from + "T00:00:00").getTime();
+  const diffDays = diffMs / 86400000;
+  if (diffDays <= 31) return "dia";
+  if (diffDays <= 90) return "semana";
+  return "mes";
+}
+
+interface AggregatedRow {
+  label: string;
+  embarque: number;
+  desembarque: number;
+  total: number;
+}
+
+function aggregateData(
+  diario: { date: string; embarque: number; desembarque: number }[],
+  dateFrom: string,
+  dateTo: string,
+  granularidade: Granularidade,
+): AggregatedRow[] {
+  const filtered = diario.filter((d) => d.date >= dateFrom && d.date <= dateTo);
+  if (granularidade === "dia") {
+    const last30 = filtered.slice(-30);
+    return last30.map((d) => ({
+      label: formatDate(d.date),
+      embarque: d.embarque,
+      desembarque: d.desembarque,
+      total: d.embarque + d.desembarque,
+    }));
+  }
+
+  const buckets = new Map<string, { embarque: number; desembarque: number }>();
+  for (const d of filtered) {
+    const key = granularidade === "semana" ? getWeekKey(d.date) : getMonthKey(d.date);
+    const cur = buckets.get(key) ?? { embarque: 0, desembarque: 0 };
+    cur.embarque += d.embarque;
+    cur.desembarque += d.desembarque;
+    buckets.set(key, cur);
+  }
+
+  return [...buckets.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([key, val]) => ({
+    label: granularidade === "semana" ? formatWeekRange(key) : mesLabel(key),
+    embarque: val.embarque,
+    desembarque: val.desembarque,
+    total: val.embarque + val.desembarque,
+  }));
+}
+
 const DashboardPassageirosContent = () => {
   const [filtros, setFiltros] = useState<FiltrosData | null>(null);
   const [data, setData] = useState<DashboardPassageirosData | null>(null);
@@ -60,6 +139,8 @@ const DashboardPassageirosContent = () => {
   const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
   const [dateFrom, setDateFrom] = useState(firstDayOfYear.toISOString().slice(0, 10));
   const [dateTo, setDateTo] = useState(today.toISOString().slice(0, 10));
+
+  const [granularidade, setGranularidade] = useState<Granularidade>(() => autoGranularidade(firstDayOfYear.toISOString().slice(0, 10), today.toISOString().slice(0, 10)));
 
   const toggleFilter = (list: string[], item: string, setter: (v: string[]) => void) => {
     setter(list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
@@ -97,14 +178,10 @@ const DashboardPassageirosContent = () => {
     fetchData();
   }, [fetchData]);
 
-  const chartData = data?.diario
-    .filter((d) => d.date >= dateFrom && d.date <= dateTo)
-    .map((d) => ({
-      date: formatDate(d.date),
-      embarque: d.embarque,
-      desembarque: d.desembarque,
-      total: d.embarque + d.desembarque,
-    })) ?? [];
+  const chartData = useMemo(
+    () => data?.diario ? aggregateData(data.diario, dateFrom, dateTo, granularidade) : [],
+    [data, dateFrom, dateTo, granularidade],
+  );
 
   const allMeses = data?.tabela_operadoras.length
     ? Object.keys(data.tabela_operadoras[0].meses).sort()
@@ -177,16 +254,30 @@ const DashboardPassageirosContent = () => {
 
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex items-center justify-end gap-3 p-4">
-          <div className="flex items-center gap-2 text-sm border rounded px-3 py-1.5" style={{ borderColor: "#D0D0D0" }}>
+        <div className="flex items-center justify-between px-6 py-3 border-b" style={{ borderColor: "#E8E8E8" }}>
+          <h2 className="text-sm font-semibold" style={{ color: "#222" }}>Dashboard Passageiros</h2>
+          <div className="flex items-center gap-2 text-sm border rounded-md px-3 py-1.5" style={{ borderColor: "#D0D0D0" }}>
             <Calendar size={14} className="text-muted-foreground" />
-            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="bg-transparent outline-none text-sm" />
-            <span className="text-muted-foreground">-</span>
-            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="bg-transparent outline-none text-sm" />
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => {
+                setDateFrom(e.target.value);
+                setGranularidade(autoGranularidade(e.target.value, dateTo));
+              }}
+              className="bg-transparent outline-none text-sm"
+            />
+            <span className="text-muted-foreground">—</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => {
+                setDateTo(e.target.value);
+                setGranularidade(autoGranularidade(dateFrom, e.target.value));
+              }}
+              className="bg-transparent outline-none text-sm"
+            />
           </div>
-          <button className="p-1.5 rounded hover:bg-gray-100"><Filter size={16} className="text-muted-foreground" /></button>
-          <button className="p-1.5 rounded hover:bg-gray-100"><Maximize2 size={16} className="text-muted-foreground" /></button>
-          <button className="p-1.5 rounded hover:bg-gray-100"><MoreHorizontal size={16} className="text-muted-foreground" /></button>
         </div>
 
         <div className="flex-1 overflow-auto px-6 pb-6">
@@ -201,34 +292,84 @@ const DashboardPassageirosContent = () => {
               {/* KPI Cards */}
               <div className="grid grid-cols-3 gap-4 mb-6">
                 {[
-                  { label: "Passageiros", value: data.kpis.total_passageiros.toLocaleString("pt-BR") },
-                  { label: "Decolagem — Contagem de N. do Voo", value: data.kpis.total_decolagens.toLocaleString("pt-BR") },
-                  { label: "Pouso — Contagem de N. do Voo", value: data.kpis.total_pousos.toLocaleString("pt-BR") },
+                  {
+                    label: "Total Passageiros",
+                    value: data.kpis.total_passageiros.toLocaleString("pt-BR"),
+                    icon: Users,
+                    color: "#8B0000",
+                    bg: "#FDF2F2",
+                  },
+                  {
+                    label: "Decolagens",
+                    value: data.kpis.total_decolagens.toLocaleString("pt-BR"),
+                    icon: PlaneTakeoff,
+                    color: "#1D4ED8",
+                    bg: "#EFF6FF",
+                  },
+                  {
+                    label: "Pousos",
+                    value: data.kpis.total_pousos.toLocaleString("pt-BR"),
+                    icon: PlaneLanding,
+                    color: "#15803D",
+                    bg: "#F0FDF4",
+                  },
                 ].map((kpi) => (
-                  <div key={kpi.label} className="rounded-md border bg-white p-5" style={{ borderColor: "#E0E0E0" }}>
-                    <p className="text-xs text-muted-foreground mb-1">{kpi.label}</p>
-                    <p className="text-2xl font-bold" style={{ color: "#222222" }}>{kpi.value}</p>
+                  <div key={kpi.label} className="rounded-lg border bg-white p-5 flex items-start gap-4" style={{ borderColor: "#E0E0E0" }}>
+                    <div className="rounded-lg p-2.5 flex-shrink-0" style={{ backgroundColor: kpi.bg }}>
+                      <kpi.icon size={20} style={{ color: kpi.color }} />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-0.5">{kpi.label}</p>
+                      <p className="text-2xl font-bold tracking-tight" style={{ color: "#222222" }}>{kpi.value}</p>
+                    </div>
                   </div>
                 ))}
               </div>
 
               {/* Stacked Bar Chart */}
-              <div className="rounded-md border bg-white p-5 mb-6" style={{ borderColor: "#E0E0E0" }}>
-                <h3 className="text-sm font-semibold mb-4" style={{ color: "#222222" }}>Passageiros por Ano, Mes, Dia e Servico</h3>
+              <div className="rounded-lg border bg-white p-5 mb-6" style={{ borderColor: "#E0E0E0" }}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold" style={{ color: "#222222" }}>
+                    Passageiros por Servico
+                  </h3>
+                  <div className="flex items-center rounded-md border overflow-hidden" style={{ borderColor: "#D0D0D0" }}>
+                    {([
+                      { key: "dia" as Granularidade, label: "Dia" },
+                      { key: "semana" as Granularidade, label: "Semana" },
+                      { key: "mes" as Granularidade, label: "Mês" },
+                    ]).map((opt) => (
+                      <button
+                        key={opt.key}
+                        onClick={() => setGranularidade(opt.key)}
+                        className="px-3 py-1.5 text-xs font-medium transition-colors"
+                        style={{
+                          backgroundColor: granularidade === opt.key ? "#8B0000" : "#FFFFFF",
+                          color: granularidade === opt.key ? "#FFFFFF" : "#666666",
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 {chartData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={360}>
-                    <BarChart data={chartData} barCategoryGap="20%">
+                    <BarChart data={chartData} barCategoryGap={granularidade === "dia" ? "8%" : "20%"}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#E8E8E8" vertical={false} />
-                      <XAxis dataKey="date" fontSize={11} tickLine={false} axisLine={false} />
-                      <YAxis fontSize={11} tickLine={false} axisLine={false} />
+                      <XAxis dataKey="label" fontSize={granularidade === "semana" ? 10 : 11} tickLine={false} axisLine={false} angle={granularidade === "semana" ? -25 : 0} textAnchor={granularidade === "semana" ? "end" : "middle"} height={granularidade === "semana" ? 50 : 30} />
+                      <YAxis fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v: number) => v.toLocaleString("pt-BR")} />
                       <Tooltip content={<CustomBarTooltip />} />
                       <Legend verticalAlign="top" align="left" iconType="circle" iconSize={8} wrapperStyle={{ paddingBottom: 12, fontSize: 12 }} />
                       <Bar dataKey="embarque" name="Embarque" stackId="a" fill={EMBARQUE_COLOR}>
-                        <LabelList dataKey="embarque" position="center" fill="#FFFFFF" fontSize={10} />
+                        {granularidade !== "dia" && (
+                          <LabelList dataKey="embarque" position="center" fill="#FFFFFF" fontSize={10} formatter={(v: number) => v.toLocaleString("pt-BR")} />
+                        )}
                       </Bar>
                       <Bar dataKey="desembarque" name="Desembarque" stackId="a" fill={DESEMBARQUE_COLOR} radius={[4, 4, 0, 0]}>
-                        <LabelList dataKey="desembarque" position="center" fill="#FFFFFF" fontSize={10} />
-                        <LabelList dataKey="total" position="top" fill="#222222" fontSize={10} fontWeight="bold" />
+                        {granularidade !== "dia" && (
+                          <LabelList dataKey="desembarque" position="center" fill="#FFFFFF" fontSize={10} formatter={(v: number) => v.toLocaleString("pt-BR")} />
+                        )}
+                        <LabelList dataKey="total" position="top" fill="#222222" fontSize={10} fontWeight="bold" formatter={(v: number) => v.toLocaleString("pt-BR")} />
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
