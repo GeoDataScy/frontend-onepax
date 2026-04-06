@@ -43,6 +43,12 @@ interface FieldConfig {
     readOnly?: boolean;
 }
 
+interface ExportFieldConfig {
+    key: string;
+    label: string;
+    type: "text" | "number" | "date" | "time";
+}
+
 const MODULE_CONFIG: Record<
     ModuleType,
     {
@@ -51,6 +57,7 @@ const MODULE_CONFIG: Record<
         service: any;
         columns: ColumnConfig[];
         fields: FieldConfig[];
+        exportFields?: ExportFieldConfig[];
     }
 > = {
     embarque: {
@@ -69,6 +76,18 @@ const MODULE_CONFIG: Record<
             { key: "passengers_boarded", label: "Pax" },
         ],
         fields: [
+            { key: "flight_number", label: "Número do Voo", type: "text" },
+            { key: "aeronave", label: "Aeronave", type: "text" },
+            { key: "operadora", label: "Operadora", type: "text" },
+            { key: "departure_date", label: "Data de Partida", type: "date" },
+            { key: "departure_time", label: "Horário de Partida", type: "time" },
+            { key: "platform", label: "Plataforma", type: "text" },
+            { key: "icao", label: "ICAO", type: "text" },
+            { key: "cliente_final", label: "Cliente Final", type: "text" },
+            { key: "passengers_boarded", label: "Passageiros Embarcados", type: "number" },
+            { key: "observacao", label: "Observação", type: "text" },
+        ],
+        exportFields: [
             { key: "flight_number", label: "N° do Voo", type: "text" },
             { key: "aeronave", label: "Aeronave", type: "text" },
             { key: "operadora", label: "Operadora", type: "text" },
@@ -97,12 +116,24 @@ const MODULE_CONFIG: Record<
             { key: "passengers_disembarked", label: "Pax" },
         ],
         fields: [
+            { key: "flight_number", label: "Número do Voo", type: "text" },
+            { key: "aeronave", label: "Aeronave", type: "text" },
+            { key: "operadora", label: "Operadora", type: "text" },
+            { key: "arrival_date", label: "Data de Chegada", type: "date" },
+            { key: "arrival_time", label: "Horário de Chegada", type: "time" },
+            { key: "origin", label: "Origem", type: "text" },
+            { key: "icao", label: "ICAO", type: "text" },
+            { key: "cliente_final", label: "Cliente Final", type: "text" },
+            { key: "passengers_disembarked", label: "Passageiros Desembarcados", type: "number" },
+            { key: "observacao", label: "Observação", type: "text" },
+        ],
+        exportFields: [
             { key: "flight_number", label: "N° do Voo", type: "text" },
             { key: "aeronave", label: "Aeronave", type: "text" },
             { key: "operadora", label: "Operadora", type: "text" },
             { key: "arrival_date", label: "Data de Registro", type: "date" },
             { key: "arrival_time", label: "Hora do Registro", type: "time" },
-            { key: "platform", label: "Plataforma", type: "text" },
+            { key: "origin", label: "Plataforma", type: "text" },
             { key: "icao", label: "ICAO", type: "text" },
             { key: "passengers_disembarked", label: "Passageiros Desembarcados", type: "number" },
             { key: "cliente_final", label: "Cliente Final", type: "text" },
@@ -289,14 +320,15 @@ export default function Supervisor() {
             toast.error("Nenhum registro para exportar");
             return;
         }
+        const fieldsForExport = activeConfig.exportFields ?? activeConfig.fields;
         const exportData = filteredRecords.map((record) => {
             const row: Record<string, any> = {};
-            activeConfig.fields.forEach((field) => {
+            fieldsForExport.forEach((field) => {
                 let value = record[field.key] ?? "";
                 if (field.type === "date" && value) {
-                    const d = new Date(value);
-                    if (!isNaN(d.getTime())) {
-                        value = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+                    const parts = String(value).split("-");
+                    if (parts.length === 3) {
+                        value = `${parts[2]}/${parts[1]}/${parts[0]}`;
                     }
                 }
                 if (field.type === "time" && value) {
