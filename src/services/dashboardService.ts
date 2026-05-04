@@ -81,6 +81,7 @@ const NOME_MAPA: Record<string, string> = {
   'omni táxi aéreo': 'Omni',
   'petrobras': 'Petrobras',
   'prio': 'Prio',
+  'spot': 'Spot',
 };
 
 function normalizeName(name: string): string {
