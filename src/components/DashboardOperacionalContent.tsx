@@ -4,8 +4,8 @@ import {
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  Legend, LabelList, LineChart, Line,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  Legend, LabelList, LineChart, Line, ReferenceLine,
 } from "recharts";
 import {
   dashboardService,
@@ -152,25 +152,11 @@ const DashboardOperacionalContent = () => {
     return row;
   }) ?? [];
 
-  // Line chart: when range > 31 days, show last month with data; otherwise show full range
+  // Line chart: show all days in the selected range (no month cap)
   const { dailyLineData, lineChartPeriodo } = (() => {
     if (!paxData?.diario) return { dailyLineData: [], lineChartPeriodo: "" };
-    const diffDays = (new Date(dateTo + "T00:00:00").getTime() - new Date(dateFrom + "T00:00:00").getTime()) / 86400000;
-    let filtered = paxData.diario.filter((d) => d.date >= dateFrom && d.date <= dateTo);
-    let periodo = "";
-
-    if (diffDays > 31 && filtered.length > 0) {
-      // Find the last month that has data
-      const lastDate = filtered[filtered.length - 1].date;
-      const lastMonth = lastDate.slice(0, 7); // "YYYY-MM"
-      filtered = filtered.filter((d) => d.date.startsWith(lastMonth));
-      const [y, m] = lastMonth.split("-");
-      const nomes = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-      periodo = `Exibindo: ${nomes[parseInt(m, 10) - 1]} ${y}`;
-    } else {
-      periodo = `Exibindo: ${new Date(dateFrom + "T00:00:00").toLocaleDateString("pt-BR")} — ${new Date(dateTo + "T00:00:00").toLocaleDateString("pt-BR")}`;
-    }
-
+    const filtered = paxData.diario.filter((d) => d.date >= dateFrom && d.date <= dateTo);
+    const periodo = `${new Date(dateFrom + "T00:00:00").toLocaleDateString("pt-BR")} — ${new Date(dateTo + "T00:00:00").toLocaleDateString("pt-BR")}`;
     const data = filtered.map((d) => {
       const dt = new Date(d.date + "T00:00:00");
       const label = `${dt.getDate().toString().padStart(2, "0")}/${(dt.getMonth() + 1).toString().padStart(2, "0")}`;
@@ -211,21 +197,6 @@ const DashboardOperacionalContent = () => {
           <span className="text-xs text-muted-foreground">/ OPERACIONAL</span>
         </div>
 
-        {/* Date Filter */}
-        <div>
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Período</label>
-          <div className="mt-2 flex flex-col gap-2">
-            <div className="flex items-center gap-1.5 border rounded-md px-2 py-1.5" style={{ borderColor: "#D0D0D0" }}>
-              <Calendar size={12} className="text-muted-foreground flex-shrink-0" />
-              <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="bg-transparent outline-none text-xs w-full" />
-            </div>
-            <div className="flex items-center gap-1.5 border rounded-md px-2 py-1.5" style={{ borderColor: "#D0D0D0" }}>
-              <Calendar size={12} className="text-muted-foreground flex-shrink-0" />
-              <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="bg-transparent outline-none text-xs w-full" />
-            </div>
-          </div>
-        </div>
-
         {/* Empresa Filter */}
         <div>
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Empresa</label>
@@ -252,10 +223,13 @@ const DashboardOperacionalContent = () => {
           </div>
         </div>
 
-        {/* Tipo ICAO Filter - Listbox */}
+        {/* ICAO Aeródromo Filter - Listbox */}
+        {/* TODO: esse filtro exibe o ICAO do aeródromo de origem/destino (ex: 9NN, 9PAP, 0000).
+            Precisa ser refatorado para exibir o Tipo ICAO da aeronave (ex: A139, H160, H175, S92).
+            Depende de integração com o RAB (Registro Aeronáutico Brasileiro) ou cadastro próprio de aeronaves. */}
         <div>
           <div className="flex items-center justify-between">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Tipo ICAO</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">ICAO Aeródromo</label>
             {selectedIcao.length > 0 && (
               <button onClick={() => setSelectedIcao([])} className="text-[10px] text-muted-foreground hover:text-red-600 underline">
                 Limpar
@@ -300,9 +274,19 @@ const DashboardOperacionalContent = () => {
           <h2 className="text-sm font-semibold" style={{ color: "#222" }}>Dashboard Operacional</h2>
           <div className="flex items-center gap-2 text-sm border rounded-md px-3 py-1.5" style={{ borderColor: "#D0D0D0" }}>
             <Calendar size={14} className="text-muted-foreground" />
-            <span className="text-xs" style={{ color: "#666" }}>
-              {new Date(dateFrom + "T00:00:00").toLocaleDateString("pt-BR")} — {new Date(dateTo + "T00:00:00").toLocaleDateString("pt-BR")}
-            </span>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="bg-transparent outline-none text-sm"
+            />
+            <span className="text-muted-foreground">—</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="bg-transparent outline-none text-sm"
+            />
           </div>
         </div>
 
@@ -409,90 +393,110 @@ const DashboardOperacionalContent = () => {
               </table>
             </div>
 
-            {/* Stacked Bar Chart */}
-            <div className="bg-white rounded-lg border p-5" style={{ borderColor: "#E0E0E0" }}>
-              {barData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={360}>
-                  <BarChart data={barData} barCategoryGap="18%">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E8E8E8" vertical={false} />
-                    <XAxis dataKey="mes" fontSize={11} tickLine={false} axisLine={false} />
-                    <YAxis fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v: number) => v.toLocaleString("pt-BR")} />
-                    <Tooltip content={<CustomStackedTooltip />} />
-                    <Legend verticalAlign="top" align="left" iconType="circle" iconSize={8} wrapperStyle={{ paddingBottom: 16, fontSize: 12 }} />
-                    {todasEmpresas.map((emp, i) => {
-                      const cor = getCorEmpresa(emp, i);
-                      const isLast = i === todasEmpresas.length - 1;
-                      return (
-                        <Bar key={emp} dataKey={emp} name={emp} stackId="a" fill={cor} radius={isLast ? [4, 4, 0, 0] : undefined}>
-                          <LabelList content={renderStackedLabel(cor)} />
-                        </Bar>
-                      );
-                    })}
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-10">Nenhum dado no periodo selecionado</p>
-              )}
-            </div>
-
-            {/* Line Chart - Media Diaria */}
+            {/* Line Chart - Media Diaria (primeiro conforme layout) */}
             <div className="bg-white rounded-lg border p-5" style={{ borderColor: "#E0E0E0" }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold" style={{ color: "#222222" }}>Media Diaria de Passageiros</h3>
                 <span className="text-[10px] text-muted-foreground">{lineChartPeriodo}</span>
               </div>
-              {dailyLineData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={320}>
-                  <LineChart data={dailyLineData} margin={{ top: 20, right: 30, bottom: 0, left: 0 }}>
-                    <defs>
-                      <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={LINE_COLOR} stopOpacity={0.15} />
-                        <stop offset="100%" stopColor={LINE_COLOR} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" vertical={false} />
-                    <XAxis
-                      dataKey="dia"
-                      fontSize={10}
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fill: "#999" }}
-                      interval={0}
-                    />
-                    <YAxis
-                      fontSize={10}
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fill: "#999" }}
-                      tickFormatter={(v: number) => v.toLocaleString("pt-BR")}
-                      width={50}
-                    />
-                    <Tooltip
-                      contentStyle={{ borderRadius: 8, border: "1px solid #E8E8E8", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", fontSize: 12 }}
-                      formatter={(value: number) => [value.toLocaleString("pt-BR"), "Passageiros"]}
-                      labelStyle={{ fontWeight: 600, marginBottom: 4 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="total"
-                      stroke={LINE_COLOR}
-                      strokeWidth={2}
-                      dot={{ r: 3, fill: LINE_COLOR, stroke: "#fff", strokeWidth: 2 }}
-                      activeDot={{ r: 5, fill: LINE_COLOR, stroke: "#fff", strokeWidth: 2 }}
-                    >
-                      <LabelList
-                        dataKey="total"
-                        position="top"
-                        offset={10}
-                        fontSize={9}
-                        fontWeight="bold"
-                        fill="#333"
-                        formatter={(v: number) => v.toLocaleString("pt-BR")}
+              {dailyLineData.length > 0 ? (() => {
+                const lineChartWidth = Math.max(700, dailyLineData.length * 28);
+                const showLabels = dailyLineData.length <= 60;
+                const lineAvg = Math.round(dailyLineData.reduce((s, d) => s + d.total, 0) / dailyLineData.length);
+                return (
+                  <div style={{ overflowX: "auto", overflowY: "hidden" }}>
+                    <LineChart width={lineChartWidth} height={320} data={dailyLineData} margin={{ top: 20, right: 30, bottom: 0, left: 0 }}>
+                      <defs>
+                        <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={LINE_COLOR} stopOpacity={0.15} />
+                          <stop offset="100%" stopColor={LINE_COLOR} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" vertical={false} />
+                      <XAxis
+                        dataKey="dia"
+                        fontSize={10}
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fill: "#999" }}
+                        interval={dailyLineData.length > 60 ? Math.floor(dailyLineData.length / 30) : 0}
+                        angle={dailyLineData.length > 60 ? -45 : 0}
+                        textAnchor={dailyLineData.length > 60 ? "end" : "middle"}
+                        height={dailyLineData.length > 60 ? 50 : 30}
                       />
-                    </Line>
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
+                      <YAxis
+                        fontSize={10}
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fill: "#999" }}
+                        tickFormatter={(v: number) => v.toLocaleString("pt-BR")}
+                        width={50}
+                      />
+                      <Tooltip
+                        contentStyle={{ borderRadius: 8, border: "1px solid #E8E8E8", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", fontSize: 12 }}
+                        formatter={(value: number) => [value.toLocaleString("pt-BR"), "Passageiros"]}
+                        labelStyle={{ fontWeight: 600, marginBottom: 4 }}
+                      />
+                      <ReferenceLine
+                        y={lineAvg}
+                        stroke="#00C853"
+                        strokeWidth={3}
+                        strokeDasharray="6 3"
+                        label={{ value: `Média: ${lineAvg.toLocaleString("pt-BR")}`, position: "insideTopRight", fill: "#00C853", fontSize: 11, fontWeight: "bold" }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="total"
+                        stroke={LINE_COLOR}
+                        strokeWidth={2}
+                        dot={{ r: 3, fill: LINE_COLOR, stroke: "#fff", strokeWidth: 2 }}
+                        activeDot={{ r: 5, fill: LINE_COLOR, stroke: "#fff", strokeWidth: 2 }}
+                      >
+                        {showLabels && (
+                          <LabelList
+                            dataKey="total"
+                            position="top"
+                            offset={10}
+                            fontSize={9}
+                            fontWeight="bold"
+                            fill="#333"
+                            formatter={(v: number) => v.toLocaleString("pt-BR")}
+                          />
+                        )}
+                      </Line>
+                    </LineChart>
+                  </div>
+                );
+              })() : (
+                <p className="text-sm text-muted-foreground text-center py-10">Nenhum dado no periodo selecionado</p>
+              )}
+            </div>
+
+            {/* Stacked Bar Chart (segundo conforme layout) */}
+            <div className="bg-white rounded-lg border p-5" style={{ borderColor: "#E0E0E0" }}>
+              {barData.length > 0 ? (() => {
+                const barChartWidth = Math.max(700, barData.length * 65);
+                return (
+                  <div style={{ overflowX: "auto", overflowY: "hidden" }}>
+                    <BarChart width={barChartWidth} height={360} data={barData} barCategoryGap="18%">
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E8E8E8" vertical={false} />
+                      <XAxis dataKey="mes" fontSize={11} tickLine={false} axisLine={false} />
+                      <YAxis fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v: number) => v.toLocaleString("pt-BR")} />
+                      <Tooltip content={<CustomStackedTooltip />} />
+                      <Legend verticalAlign="top" align="left" iconType="circle" iconSize={8} wrapperStyle={{ paddingBottom: 16, fontSize: 12 }} />
+                      {todasEmpresas.map((emp, i) => {
+                        const cor = getCorEmpresa(emp, i);
+                        const isLast = i === todasEmpresas.length - 1;
+                        return (
+                          <Bar key={emp} dataKey={emp} name={emp} stackId="a" fill={cor} radius={isLast ? [4, 4, 0, 0] : undefined}>
+                            <LabelList content={renderStackedLabel(cor)} />
+                          </Bar>
+                        );
+                      })}
+                    </BarChart>
+                  </div>
+                );
+              })() : (
                 <p className="text-sm text-muted-foreground text-center py-10">Nenhum dado no periodo selecionado</p>
               )}
             </div>
