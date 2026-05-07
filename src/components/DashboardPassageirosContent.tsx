@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Calendar, Users, PlaneTakeoff, PlaneLanding } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   Legend, LabelList,
 } from "recharts";
 import {
@@ -98,8 +98,7 @@ function aggregateData(
 ): AggregatedRow[] {
   const filtered = diario.filter((d) => d.date >= dateFrom && d.date <= dateTo);
   if (granularidade === "dia") {
-    const last30 = filtered.slice(-30);
-    return last30.map((d) => ({
+    return filtered.map((d) => ({
       label: formatDate(d.date),
       embarque: d.embarque,
       desembarque: d.desembarque,
@@ -172,7 +171,7 @@ const DashboardPassageirosContent = () => {
     } finally {
       setLoading(false);
     }
-  }, [dateFrom, dateTo, selectedOperadoras, selectedClientes, selectedServicos, aeronave]);
+  }, [dateFrom, dateTo, selectedOperadoras, selectedClientes, selectedServicos, aeronave, filtros]);
 
   useEffect(() => {
     fetchData();
@@ -352,28 +351,32 @@ const DashboardPassageirosContent = () => {
                     ))}
                   </div>
                 </div>
-                {chartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={360}>
-                    <BarChart data={chartData} barCategoryGap={granularidade === "dia" ? "8%" : "20%"}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E8E8E8" vertical={false} />
-                      <XAxis dataKey="label" fontSize={granularidade === "semana" ? 10 : 11} tickLine={false} axisLine={false} angle={granularidade === "semana" ? -25 : 0} textAnchor={granularidade === "semana" ? "end" : "middle"} height={granularidade === "semana" ? 50 : 30} />
-                      <YAxis fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v: number) => v.toLocaleString("pt-BR")} />
-                      <Tooltip content={<CustomBarTooltip />} />
-                      <Legend verticalAlign="top" align="left" iconType="circle" iconSize={8} wrapperStyle={{ paddingBottom: 12, fontSize: 12 }} />
-                      <Bar dataKey="embarque" name="Embarque" stackId="a" fill={EMBARQUE_COLOR}>
-                        {granularidade !== "dia" && (
-                          <LabelList dataKey="embarque" position="center" fill="#FFFFFF" fontSize={10} formatter={(v: number) => v.toLocaleString("pt-BR")} />
-                        )}
-                      </Bar>
-                      <Bar dataKey="desembarque" name="Desembarque" stackId="a" fill={DESEMBARQUE_COLOR} radius={[4, 4, 0, 0]}>
-                        {granularidade !== "dia" && (
-                          <LabelList dataKey="desembarque" position="center" fill="#FFFFFF" fontSize={10} formatter={(v: number) => v.toLocaleString("pt-BR")} />
-                        )}
-                        <LabelList dataKey="total" position="top" fill="#222222" fontSize={10} fontWeight="bold" formatter={(v: number) => v.toLocaleString("pt-BR")} />
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
+                {chartData.length > 0 ? (() => {
+                  const pxPerBar = granularidade === "dia" ? 22 : granularidade === "semana" ? 50 : 70;
+                  const chartWidth = Math.max(700, chartData.length * pxPerBar);
+                  return (
+                    <div style={{ overflowX: "auto", overflowY: "hidden" }}>
+                      <BarChart width={chartWidth} height={360} data={chartData} barCategoryGap={granularidade === "dia" ? "8%" : "20%"}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#E8E8E8" vertical={false} />
+                        <XAxis dataKey="label" fontSize={granularidade === "semana" ? 10 : 11} tickLine={false} axisLine={false} angle={granularidade === "semana" || (granularidade === "dia" && chartData.length > 30) ? -25 : 0} textAnchor={granularidade === "semana" || (granularidade === "dia" && chartData.length > 30) ? "end" : "middle"} height={granularidade === "semana" || (granularidade === "dia" && chartData.length > 30) ? 50 : 30} interval={0} />
+                        <YAxis fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v: number) => v.toLocaleString("pt-BR")} />
+                        <Tooltip content={<CustomBarTooltip />} />
+                        <Legend verticalAlign="top" align="left" iconType="circle" iconSize={8} wrapperStyle={{ paddingBottom: 12, fontSize: 12 }} />
+                        <Bar dataKey="embarque" name="Embarque" stackId="a" fill={EMBARQUE_COLOR}>
+                          {granularidade !== "dia" && (
+                            <LabelList dataKey="embarque" position="center" fill="#FFFFFF" fontSize={10} formatter={(v: number) => v.toLocaleString("pt-BR")} />
+                          )}
+                        </Bar>
+                        <Bar dataKey="desembarque" name="Desembarque" stackId="a" fill={DESEMBARQUE_COLOR} radius={[4, 4, 0, 0]}>
+                          {granularidade !== "dia" && (
+                            <LabelList dataKey="desembarque" position="center" fill="#FFFFFF" fontSize={10} formatter={(v: number) => v.toLocaleString("pt-BR")} />
+                          )}
+                          <LabelList dataKey="total" position="top" fill="#222222" fontSize={10} fontWeight="bold" formatter={(v: number) => v.toLocaleString("pt-BR")} />
+                        </Bar>
+                      </BarChart>
+                    </div>
+                  );
+                })() : (
                   <p className="text-sm text-muted-foreground text-center py-10">Nenhum dado no periodo selecionado</p>
                 )}
               </div>

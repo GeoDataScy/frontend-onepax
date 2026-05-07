@@ -65,7 +65,7 @@ const DashboardOperacionalContent = () => {
 
   const [selectedEmpresas, setSelectedEmpresas] = useState<string[]>([]);
   const [selectedClientes, setSelectedClientes] = useState<string[]>([]);
-  const [selectedIcao, setSelectedIcao] = useState<string[]>([]);
+  const [selectedAeronaves, setSelectedAeronaves] = useState<string[]>([]);
   const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set());
 
   const today = new Date();
@@ -94,7 +94,7 @@ const DashboardOperacionalContent = () => {
           cliente_final: selectedClientes.length > 0
             ? expandOriginals(selectedClientes, filtros?._originais_clientes ?? {})
             : undefined,
-          icao: selectedIcao.length > 0 ? selectedIcao : undefined,
+          aeronave: selectedAeronaves.length > 0 ? selectedAeronaves : undefined,
         }),
         dashboardService.getPassageiros({
           data_inicio: dateFrom,
@@ -114,7 +114,7 @@ const DashboardOperacionalContent = () => {
     } finally {
       setLoading(false);
     }
-  }, [dateFrom, dateTo, selectedEmpresas, selectedClientes, selectedIcao]);
+  }, [dateFrom, dateTo, selectedEmpresas, selectedClientes, selectedAeronaves, filtros]);
 
   useEffect(() => {
     fetchData();
@@ -181,9 +181,9 @@ const DashboardOperacionalContent = () => {
 
   const empresas = filtros?.operadoras ?? [];
   const clientesFinais = filtros?.clientes_finais ?? [];
-  const tiposIcao = filtros?.tipos_icao ?? [];
+  const aeronaves = filtros?.aeronaves ?? [];
 
-  const activeFilterCount = selectedEmpresas.length + selectedClientes.length + selectedIcao.length;
+  const activeFilterCount = selectedEmpresas.length + selectedClientes.length + selectedAeronaves.length;
 
   return (
     <div className="flex h-full">
@@ -223,15 +223,12 @@ const DashboardOperacionalContent = () => {
           </div>
         </div>
 
-        {/* ICAO Aeródromo Filter - Listbox */}
-        {/* TODO: esse filtro exibe o ICAO do aeródromo de origem/destino (ex: 9NN, 9PAP, 0000).
-            Precisa ser refatorado para exibir o Tipo ICAO da aeronave (ex: A139, H160, H175, S92).
-            Depende de integração com o RAB (Registro Aeronáutico Brasileiro) ou cadastro próprio de aeronaves. */}
+        {/* Aeronave Filter */}
         <div>
           <div className="flex items-center justify-between">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">ICAO Aeródromo</label>
-            {selectedIcao.length > 0 && (
-              <button onClick={() => setSelectedIcao([])} className="text-[10px] text-muted-foreground hover:text-red-600 underline">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Aeronave</label>
+            {selectedAeronaves.length > 0 && (
+              <button onClick={() => setSelectedAeronaves([])} className="text-[10px] text-muted-foreground hover:text-red-600 underline">
                 Limpar
               </button>
             )}
@@ -240,26 +237,26 @@ const DashboardOperacionalContent = () => {
             className="mt-2 border rounded-md overflow-y-auto"
             style={{ borderColor: "#D0D0D0", maxHeight: "140px" }}
           >
-            {tiposIcao.map((icao, idx) => (
+            {aeronaves.map((av, idx) => (
               <label
-                key={icao}
+                key={av}
                 className="flex items-center gap-2 px-2.5 py-1.5 text-xs cursor-pointer hover:bg-gray-50"
-                style={{ borderBottom: idx < tiposIcao.length - 1 ? "1px solid #F0F0F0" : "none" }}
+                style={{ borderBottom: idx < aeronaves.length - 1 ? "1px solid #F0F0F0" : "none" }}
               >
-                <Checkbox checked={selectedIcao.includes(icao)} onCheckedChange={() => toggleItem(selectedIcao, icao, setSelectedIcao)} />
-                {icao}
+                <Checkbox checked={selectedAeronaves.includes(av)} onCheckedChange={() => toggleItem(selectedAeronaves, av, setSelectedAeronaves)} />
+                {av}
               </label>
             ))}
           </div>
-          {selectedIcao.length > 0 && (
-            <p className="text-[10px] text-muted-foreground mt-1">{selectedIcao.length} selecionado{selectedIcao.length > 1 ? "s" : ""}</p>
+          {selectedAeronaves.length > 0 && (
+            <p className="text-[10px] text-muted-foreground mt-1">{selectedAeronaves.length} selecionada{selectedAeronaves.length > 1 ? "s" : ""}</p>
           )}
         </div>
 
         {/* Clear filters */}
         {activeFilterCount > 0 && (
           <button
-            onClick={() => { setSelectedEmpresas([]); setSelectedClientes([]); setSelectedIcao([]); }}
+            onClick={() => { setSelectedEmpresas([]); setSelectedClientes([]); setSelectedAeronaves([]); }}
             className="text-xs underline text-muted-foreground hover:text-red-600 text-left"
           >
             Limpar filtros ({activeFilterCount})
@@ -334,63 +331,6 @@ const DashboardOperacionalContent = () => {
                   </div>
                 </div>
               ))}
-            </div>
-
-            {/* Table */}
-            <div className="rounded-lg border bg-white overflow-x-auto" style={{ borderColor: "#E0E0E0" }}>
-              <table className="w-full text-xs">
-                <thead>
-                  <tr style={{ backgroundColor: "#F5F5F5" }}>
-                    <th className="text-left px-3 py-2.5 font-semibold" style={{ color: "#222" }}>Ano</th>
-                    <th className="text-left px-2 py-2.5 font-semibold" style={{ color: "#222" }}>Mês</th>
-                    {todosClientes.map((cl) => (
-                      <th key={cl} className="text-right px-2 py-2.5 font-semibold" style={{ color: "#222" }}>{cl}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {anosDisponiveis.map((year) => {
-                    const isExpanded = expandedYears.has(year);
-                    const rows = tabelaPorAno[year] ?? [];
-                    return (
-                      <React.Fragment key={year}>
-                        <tr
-                          className="cursor-pointer hover:bg-gray-50"
-                          style={{ backgroundColor: "#FAFAFA" }}
-                          onClick={() => toggleYear(year)}
-                        >
-                          <td className="px-3 py-2 font-semibold" style={{ color: "#222" }}>
-                            <span className="flex items-center gap-1">
-                              {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-                              {year}
-                            </span>
-                          </td>
-                          <td></td>
-                          {todosClientes.map((cl) => {
-                            const yearTotal = rows.reduce((sum, r) => sum + (r.clientes[cl] ?? 0), 0);
-                            return (
-                              <td key={cl} className="text-right px-2 py-2 font-semibold tabular-nums" style={{ color: "#222" }}>
-                                {yearTotal > 0 ? yearTotal.toLocaleString("pt-BR") : ""}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                        {isExpanded && rows.map((row) => (
-                          <tr key={row.mes} className="hover:bg-gray-50">
-                            <td className="px-3 py-1.5" style={{ color: "#666" }}></td>
-                            <td className="px-2 py-1.5 capitalize" style={{ color: "#444" }}>{mesLabel(row.mes)}</td>
-                            {todosClientes.map((cl) => (
-                              <td key={cl} className="text-right px-2 py-1.5 tabular-nums" style={{ color: "#444" }}>
-                                {(row.clientes[cl] ?? 0).toLocaleString("pt-BR")}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </React.Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
             </div>
 
             {/* Line Chart - Media Diaria (primeiro conforme layout) */}
@@ -499,6 +439,63 @@ const DashboardOperacionalContent = () => {
               })() : (
                 <p className="text-sm text-muted-foreground text-center py-10">Nenhum dado no periodo selecionado</p>
               )}
+            </div>
+
+            {/* Table */}
+            <div className="rounded-lg border bg-white overflow-x-auto" style={{ borderColor: "#E0E0E0" }}>
+              <table className="w-full text-xs">
+                <thead>
+                  <tr style={{ backgroundColor: "#F5F5F5" }}>
+                    <th className="text-left px-3 py-2.5 font-semibold" style={{ color: "#222" }}>Ano</th>
+                    <th className="text-left px-2 py-2.5 font-semibold" style={{ color: "#222" }}>Mês</th>
+                    {todosClientes.map((cl) => (
+                      <th key={cl} className="text-right px-2 py-2.5 font-semibold" style={{ color: "#222" }}>{cl}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {anosDisponiveis.map((year) => {
+                    const isExpanded = expandedYears.has(year);
+                    const rows = tabelaPorAno[year] ?? [];
+                    return (
+                      <React.Fragment key={year}>
+                        <tr
+                          className="cursor-pointer hover:bg-gray-50"
+                          style={{ backgroundColor: "#FAFAFA" }}
+                          onClick={() => toggleYear(year)}
+                        >
+                          <td className="px-3 py-2 font-semibold" style={{ color: "#222" }}>
+                            <span className="flex items-center gap-1">
+                              {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                              {year}
+                            </span>
+                          </td>
+                          <td></td>
+                          {todosClientes.map((cl) => {
+                            const yearTotal = rows.reduce((sum, r) => sum + (r.clientes[cl] ?? 0), 0);
+                            return (
+                              <td key={cl} className="text-right px-2 py-2 font-semibold tabular-nums" style={{ color: "#222" }}>
+                                {yearTotal > 0 ? yearTotal.toLocaleString("pt-BR") : ""}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                        {isExpanded && rows.map((row) => (
+                          <tr key={row.mes} className="hover:bg-gray-50">
+                            <td className="px-3 py-1.5" style={{ color: "#666" }}></td>
+                            <td className="px-2 py-1.5 capitalize" style={{ color: "#444" }}>{mesLabel(row.mes)}</td>
+                            {todosClientes.map((cl) => (
+                              <td key={cl} className="text-right px-2 py-1.5 tabular-nums" style={{ color: "#444" }}>
+                                {(row.clientes[cl] ?? 0).toLocaleString("pt-BR")}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </React.Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

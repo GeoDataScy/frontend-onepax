@@ -215,14 +215,14 @@ export const dashboardService = {
     data_fim?: string;
     empresa?: string[];
     cliente_final?: string[];
-    icao?: string[];
+    aeronave?: string[];
   }): Promise<DashboardOperacionalData> {
     const query = buildQuery({
       data_inicio: filters?.data_inicio,
       data_fim: filters?.data_fim,
       empresa: filters?.empresa,
       cliente_final: filters?.cliente_final,
-      icao: filters?.icao,
+      aeronave: filters?.aeronave,
     });
     const res = await fetch(`${API_URL}/api/central-analise/dashboard/operacional/${query}`, {
       headers: getAuthHeaders(),
