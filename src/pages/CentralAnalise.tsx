@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
-import { BarChart3, Users, Plane, ChevronLeft, ChevronRight } from "lucide-react";
+import { BarChart3, Users, Plane, Phone, ChevronLeft, ChevronRight } from "lucide-react";
 import DashboardPassageirosContent from "@/components/DashboardPassageirosContent";
 import DashboardOperacionalContent from "@/components/DashboardOperacionalContent";
+import ContatosWhatsappContent from "@/components/ContatosWhatsappContent";
 
-type View = "passageiros" | "operacional";
+type View = "passageiros" | "operacional" | "contatos";
 
 const sidebarItems: { key: View; label: string; icon: typeof BarChart3 }[] = [
   { key: "passageiros", label: "Passageiros", icon: Users },
   { key: "operacional", label: "Operacional", icon: Plane },
+  { key: "contatos", label: "Contatos WhatsApp", icon: Phone },
 ];
 
 const SIDEBAR_STORAGE_KEY = "central-analise:sidebar-collapsed";
@@ -80,6 +82,7 @@ const CentralAnalise = () => {
         <div className="flex-1 overflow-auto">
           {activeView === "passageiros" && <DashboardPassageirosContent />}
           {activeView === "operacional" && <DashboardOperacionalContent />}
+          {activeView === "contatos" && <ContatosWhatsappContent />}
         </div>
       </div>
     </div>
