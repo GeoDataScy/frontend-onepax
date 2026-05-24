@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { BarChart3, Users, Plane, ChevronLeft, ChevronRight } from "lucide-react";
 import DashboardPassageirosContent from "@/components/DashboardPassageirosContent";
@@ -20,7 +19,6 @@ const CentralAnalise = () => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem(SIDEBAR_STORAGE_KEY) === "1";
   });
-  const navigate = useNavigate();
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_STORAGE_KEY, collapsed ? "1" : "0");
@@ -33,7 +31,7 @@ const CentralAnalise = () => {
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <aside
-          className={`${collapsed ? "w-[56px]" : "w-[200px]"} flex-shrink-0 border-r flex flex-col py-4 justify-between transition-[width] duration-200`}
+          className={`${collapsed ? "w-[56px]" : "w-[200px]"} flex-shrink-0 border-r flex flex-col py-4 transition-[width] duration-200`}
           style={{ borderColor: "#E8E8E8", backgroundColor: "#FAFAFA" }}
         >
           <div>
@@ -75,31 +73,6 @@ const CentralAnalise = () => {
                 </button>
               ))}
             </nav>
-          </div>
-
-          {/* Byone button */}
-          <div className="px-2">
-            <button
-              onClick={() => navigate("/byone")}
-              className={`w-full flex items-center ${collapsed ? "justify-center px-2" : "gap-2.5 px-3"} py-2.5 rounded-lg text-sm font-medium transition-all hover:scale-[1.01]`}
-              title={collapsed ? "Byone" : undefined}
-              style={{
-                background: "linear-gradient(135deg, #09090b 0%, #18181b 100%)",
-                color: "#d4d4d8",
-                border: "1px solid #27272a",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "#7c3aed";
-                e.currentTarget.style.boxShadow = "0 0 12px rgba(124, 58, 237, 0.15)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "#27272a";
-                e.currentTarget.style.boxShadow = "none";
-              }}
-            >
-              <img src="/byone-icon.png" alt="Byone" className="w-5 h-5 rounded-full object-cover" />
-              {!collapsed && "Byone"}
-            </button>
           </div>
         </aside>
 

@@ -10,7 +10,6 @@ import Briefing from "./pages/Briefing";
 import Transporte from "./pages/Transporte";
 import Supervisor from "./pages/Supervisor";
 import CentralAnalise from "./pages/CentralAnalise";
-import Byone from "./pages/Byone";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -52,11 +51,6 @@ const App = () => (
             <Route path="/central-analise" element={
               <ProtectedRoute denyRoles={['apac']}>
                 <CentralAnalise />
-              </ProtectedRoute>
-            } />
-            <Route path="/byone" element={
-              <ProtectedRoute denyRoles={['apac']}>
-                <Byone />
               </ProtectedRoute>
             } />
 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
