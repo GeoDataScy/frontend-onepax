@@ -25,6 +25,35 @@ export type ContatoWhatsappInput = {
 
 const BASE = `${API_URL}/api/central-analise/contatos-whatsapp/`;
 const RELATORIO_URL = `${API_URL}/api/central-analise/relatorio-diario/`;
+const RELATORIO_MENSAL_URL = `${API_URL}/api/central-analise/relatorio-mensal/`;
+const RELATORIO_MENSAL_RESUMO_URL = `${API_URL}/api/central-analise/relatorio-mensal-resumo/`;
+const CONFIGURACAO_URL = `${API_URL}/api/central-analise/configuracao/`;
+
+export interface RelatorioMensalResumo {
+  ano: number;
+  mes: number;
+  mes_extenso: string;
+  totais: {
+    pax: number;
+    pax_embarcados: number;
+    pax_desembarcados: number;
+    voos: number;
+    voos_embarque: number;
+    voos_desembarque: number;
+    pax_por_voo: number;
+  };
+  comparativo: {
+    mes_anterior_extenso: string;
+    delta_pax_pct: number | null;
+    delta_voos_pct: number | null;
+  };
+  insights: string[];
+}
+
+export interface ConfiguracaoRelatorio {
+  horario_envio_diario: string | null;
+  atualizado_em: string;
+}
 
 export interface RelatorioDiario {
   data: string;
@@ -93,6 +122,58 @@ export const contatosWhatsappService = {
   async getRelatorioDiario(data?: string): Promise<RelatorioDiario> {
     const url = data ? `${RELATORIO_URL}?data=${encodeURIComponent(data)}` : RELATORIO_URL;
     const res = await fetch(url, { headers: getAuthHeaders() });
+    if (!res.ok) throw new Error(await parseErrorMessage(res));
+    return res.json();
+  },
+
+  async getRelatorioMensalResumo(ano?: number, mes?: number): Promise<RelatorioMensalResumo> {
+    const params = new URLSearchParams();
+    if (ano) params.set("ano", String(ano));
+    if (mes) params.set("mes", String(mes));
+    const qs = params.toString();
+    const url = qs ? `${RELATORIO_MENSAL_RESUMO_URL}?${qs}` : RELATORIO_MENSAL_RESUMO_URL;
+    const res = await fetch(url, { headers: getAuthHeaders() });
+    if (!res.ok) throw new Error(await parseErrorMessage(res));
+    return res.json();
+  },
+
+  /**
+   * Baixa o PDF do relatório mensal. Dispara o download no navegador.
+   * Retorna o nome do arquivo + mes por extenso (do header X-Onepax-Mes-Extenso).
+   */
+  async baixarRelatorioMensalPdf(ano: number, mes: number): Promise<{ filename: string; mesExtenso: string | null }> {
+    const url = `${RELATORIO_MENSAL_URL}?ano=${ano}&mes=${mes}`;
+    const res = await fetch(url, { headers: getAuthHeaders() });
+    if (!res.ok) throw new Error(await parseErrorMessage(res));
+
+    const blob = await res.blob();
+    const filename = `onepax_relatorio_${ano}_${String(mes).padStart(2, "0")}.pdf`;
+    const mesExtenso = res.headers.get("X-Onepax-Mes-Extenso");
+
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+
+    return { filename, mesExtenso };
+  },
+
+  async getConfiguracao(): Promise<ConfiguracaoRelatorio> {
+    const res = await fetch(CONFIGURACAO_URL, { headers: getAuthHeaders() });
+    if (!res.ok) throw new Error(await parseErrorMessage(res));
+    return res.json();
+  },
+
+  async updateConfiguracao(data: Partial<{ horario_envio_diario: string | null }>): Promise<ConfiguracaoRelatorio> {
+    const res = await fetch(CONFIGURACAO_URL, {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
     if (!res.ok) throw new Error(await parseErrorMessage(res));
     return res.json();
   },
