@@ -287,9 +287,6 @@ const ContatosWhatsappContent = () => {
             <div className="text-sm font-semibold" style={{ color: "#222" }}>
               Horário programado do envio diário
             </div>
-            <div className="text-xs" style={{ color: "#888" }}>
-              Sem função até o envio automático estar ativo — apenas salva a preferência.
-            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
